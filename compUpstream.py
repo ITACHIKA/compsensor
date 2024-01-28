@@ -1,16 +1,16 @@
-#testtesttest
 import serial
 import serial.tools.list_ports
 import time
 import platform
 from time import sleep
-import sys
+import json
 import threading
 import psutil
 import tkinter
 import tkinter.ttk
 import re
 from tkinter import messagebox
+from datetime import datetime
 
 ser=None
 getStatFreq=2
@@ -38,23 +38,43 @@ def getSystemStatus():
     lastByteSent=netTotOut
     return [cpuUsage,memUsage,netInMbps,netOutMbps]
 
-def connVerify():
+def initArduino():
     #verification
     try:
         hostname=platform.node()
-        verifyMsg="a114514"
-        ser.write(verifyMsg.encode('utf-8'))
-        returnMsg=ser.readline().decode('utf-8').rstrip()
-        if(returnMsg=="good"):
-            ser.write(hostname.encode('utf-8'))
-            print('Board Ready')
-            sleep(1)
+        systime=datetime.now()
+
+        hour=systime.hour
+        minute=systime.minute
+        sec=systime.second
+        year=systime.year
+        month=systime.month
+        date=systime.day
+        weekday=systime.weekday()
+
+        initData={
+            "Header":"init",
+            "hostname":hostname,
+            "hr":hour,
+            "min":minute,
+            "sec":sec,
+            "year":year,
+            "month":month,
+            "date":date,
+            "weekday":weekday
+        }
+
+        jsonDat=json.dumps(initData)+"\n"
+        print(jsonDat)
+        ser.write(jsonDat.encode('utf-8'))
+
     except Exception as e:
         print(e)
 
-
 def infoCollectDeliv():
+
     global ser,firstRun,lastRectime
+
     infoCollectTimer=threading.Timer(getStatFreq,infoCollectDeliv)
     if(newProceStartEvent.is_set()):
         if(not firstRun):
@@ -66,21 +86,26 @@ def infoCollectDeliv():
             firstRun=False
             newProceStartEvent.clear()
     sysStat=getSystemStatus()
-    print(sysStat)
     #print(time.time()-lastRectime)
     #lastRectime=time.time()
+
+    dispData={
+        "header":"data",
+        "cpu":str(sysStat[0]),
+        "mem":str(sysStat[1]),
+        "netI":str(sysStat[2]),
+        "netO":str(sysStat[3])
+    }
     
-    statStr = ",".join(map(str, sysStat))
-    statBytes = statStr.encode()
-    ser.write(statBytes)
+    jsonDispDat=json.dumps(dispData)+"\n"
+    print(jsonDispDat)
+    ser.write(jsonDispDat.encode('utf-8'))
 
     infoCollectTimer.start()
 
-        
-
 def applyButtonOnclick():
     newProceStartEvent.set()
-    sleep(1)
+
     if(portSelector.get()!=''):
         if(infoRetrieveFreq.get()!="input freqency" and re.match(r'^\d+(\.\d+)?$',infoRetrieveFreq.get()) is not None):
             global getStatFreq
@@ -95,7 +120,7 @@ def applyButtonOnclick():
             messagebox.showerror("error",e)
 
         sleep(2)
-        connVerify()
+        initArduino()
         sleep(0.5) #won't work without this waiting
 
         if(ostype=="Windows"):
@@ -128,8 +153,11 @@ window.resizable(False,False)
 def onWindowClose():
     window.destroy()
     newProceStartEvent.set()
-    stopCode="upstreamStop"
-    ser.write(stopCode.encode())
+    shutData={
+        "header":"halt",
+    }
+    jsonDispDat=json.dumps(shutData)+"\n"
+    ser.write(jsonDispDat.encode('utf-8'))
 
 portSelector=tkinter.ttk.Combobox(window,values=availPorts)
 
