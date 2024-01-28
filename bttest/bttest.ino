@@ -1,6 +1,6 @@
 #include<SoftwareSerial.h>
 
-SoftwareSerial btser(3,2);
+SoftwareSerial btser(2,3);
 
 void setup() {
   // put your setup code here, to run once:
@@ -10,14 +10,14 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  if(Serial.available()>0)
+  if(Serial.available())
   {
     String data=Serial.readString();
     btser.println(data);
-  }
-  if(btser.available()>0)
-  {
-    String data=btser.readString();
     Serial.println(data);
+  }
+  if(btser.available())
+  {
+    Serial.print(btser.readString());
   }
 }

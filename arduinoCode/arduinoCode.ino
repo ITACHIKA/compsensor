@@ -19,6 +19,14 @@ String hostname;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
+
+String twoDigits(int number) {
+  if (number < 10) {
+    return "0" + String(number);
+  }
+  return String(number);
+}
+
 void disSysInfo(String cpu,String mem,String netIn,String netOut)
 {
   //Serial.print("dispsys");
@@ -56,9 +64,18 @@ void setup() {
   }*/
   //disSysInfo("","","","");
   rtc.writeProtect(false);
-  digitalWrite(5,HIGH);
-  delay(100);
-  digitalWrite(5,LOW);
+    Time now = rtc.time();
+
+  // 格式化时间和日期
+  String formattedTime = String(now.hr) + ":" + twoDigits(now.minu) + ":" + twoDigits(now.sec);
+  String formattedDate = String(now.yr) + "-" + twoDigits(now.mon) + "-" + twoDigits(now.day);
+
+  // 输出到 Serial
+  Serial.print("Current Time: ");
+  Serial.println(formattedTime);
+
+  Serial.print("Current Date: ");
+  Serial.println(formattedDate);
 }
 
 int mapNumberToDay(int number) {
@@ -105,12 +122,15 @@ void loop() {
         Serial.println(hostname);
         //disSysInfo("1","","","");
         int hr=doc["hr"];
-        int min=doc["minute"];
+        int minu=doc["min"];
         int sec=doc["sec"];
         int year=doc["year"];
         int month=doc["month"];
-        int day=doc["date"];
-        Time newTime(year,month,day,hr,min,sec,mapNumberToDay(doc["weekday"]));
+        int date=doc["date"];
+        Serial.print(year);
+        Serial.print(month);
+        Serial.print(date);
+        Time newTime(year,month,date,hr,minu,sec,mapNumberToDay(doc["weekday"]));
         rtc.time(newTime);
       }
       else if(header == "halt")

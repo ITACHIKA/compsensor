@@ -81,6 +81,7 @@ def infoCollectDeliv():
             print("reset!")
             infoCollectTimer.cancel()
             newProceStartEvent.clear()
+            ser.close()
             return
         else:
             firstRun=False
@@ -105,7 +106,7 @@ def infoCollectDeliv():
 
 def applyButtonOnclick():
     newProceStartEvent.set()
-
+    sleep(0.5)
     if(portSelector.get()!=''):
         if(infoRetrieveFreq.get()!="input freqency" and re.match(r'^\d+(\.\d+)?$',infoRetrieveFreq.get()) is not None):
             global getStatFreq
