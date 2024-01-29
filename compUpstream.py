@@ -114,7 +114,7 @@ def applyButtonOnclick():
             print("freq:"+str(getStatFreq))
         #connect to serial
         global ser
-        try:
+        try: 
             ser=serial.Serial(port=portSelector.get(),baudrate=9600,timeout=2)
             print(portSelector.get())
         except Exception as e:

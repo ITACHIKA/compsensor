@@ -76,7 +76,7 @@ void setup() {
 
   Serial.print("Current Date: ");
   Serial.println(formattedDate);
-}
+}  
 
 int mapNumberToDay(int number) {
     switch (number) {
