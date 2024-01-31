@@ -11,6 +11,7 @@ import tkinter.ttk
 import re
 from tkinter import messagebox
 from datetime import datetime
+import bluetooth
 
 ser=None
 getStatFreq=2
@@ -20,6 +21,8 @@ lastByteSent=0
 lastRectime=time.time()
 firstRun=True
 ostype=platform.system()
+btAddr=''
+btGood=True
 
 print(ostype)
 
@@ -52,21 +55,11 @@ def initArduino():
         date=systime.day
         weekday=systime.weekday()
 
-        initData={
-            "Header":"init",
-            "hostname":hostname,
-            "hr":hour,
-            "min":minute,
-            "sec":sec,
-            "year":year,
-            "month":month,
-            "date":date,
-            "weekday":weekday
-        }
-
-        jsonDat=json.dumps(initData)+"\n"
-        print(jsonDat)
-        ser.write(jsonDat.encode('utf-8'))
+        initStr = ",".join(map(str,[hostname,hour,minute,sec,year,month,date,weekday]))
+        initStr = "init,"+initStr+"\n"
+        print(initStr)
+        initBytes = initStr.encode("utf-8")
+        ser.write(initBytes)
 
     except Exception as e:
         print(e)
@@ -90,21 +83,18 @@ def infoCollectDeliv():
     #print(time.time()-lastRectime)
     #lastRectime=time.time()
 
-    dispData={
-        "header":"data",
-        "cpu":str(sysStat[0]),
-        "mem":str(sysStat[1]),
-        "netI":str(sysStat[2]),
-        "netO":str(sysStat[3])
-    }
-    
-    jsonDispDat=json.dumps(dispData)+"\n"
-    print(jsonDispDat)
-    ser.write(jsonDispDat.encode('utf-8'))
+    statStr = ",".join(map(str, sysStat))
+    statStr = "data,"+statStr+"\n"
+    print(statStr)
+    statBytes = statStr.encode('utf-8')
+    ser.write(statBytes)
 
     infoCollectTimer.start()
 
 def applyButtonOnclick():
+    if(not btGood):
+        messagebox.showerror("Error","BT is not ready")
+        return
     newProceStartEvent.set()
     sleep(0.5)
     if(portSelector.get()!=''):
@@ -130,13 +120,35 @@ def applyButtonOnclick():
         infoCollectDeliv()
 
 def writeCfg():
+    btMac=getBtAddr.get()
     port=portSelector.get()
     freq=re.match(r'^\d+(\.\d+)?$',infoRetrieveFreq.get()).group()
     if(freq==None):
         freq=getStatFreq
     with open("sensorconfig",'w') as cfgfile:
-        cfgfile.writelines([port+"\n",str(freq)+"\n"])
+        cfgfile.writelines([btMac+"\n"+port+"\n",str(freq)+"\n"])
 
+def getBtOnClick():
+    global btAddr
+    btAdapAddr=bluetooth.read_local_bdaddr()
+    btAddr=getBtAddr.get()
+    btPattern = re.compile(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
+    addrGood=btPattern.match(btAddr)
+    devices = bluetooth.discover_devices(lookup_names=True, lookup_class=True, device_id=-1, duration=4)
+    for addr, name, _ in devices:
+        print(f"Device Address: {addr}")
+        print(f"Device Name: {name}")
+    if(addrGood):
+        try:
+            btsock=bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+            channel=3
+            btsock.settimeout(5)
+            btsock.connect((btAddr,channel))
+            print("Pair found. Remove.")
+        except Exception as e:
+            print(e)
+    else:
+        messagebox.showerror("Error","Invalid Mac format")
 
 fullAvailPorts=list(serial.tools.list_ports.comports())
 availPorts=[]
@@ -146,19 +158,16 @@ for port in fullAvailPorts:
 window=tkinter.Tk()
 window.title("Arduino Sensor")
 if(ostype=="Windows"):
-    window.geometry('220x140')
+    window.geometry('220x200')
 else:
-    window.geometry('210x130')
+    window.geometry('210x190')
 window.resizable(False,False)
 
 def onWindowClose():
     window.destroy()
     newProceStartEvent.set()
-    shutData={
-        "header":"halt",
-    }
-    jsonDispDat=json.dumps(shutData)+"\n"
-    ser.write(jsonDispDat.encode('utf-8'))
+    shutData="halt"
+    ser.write(shutData.encode('utf-8'))
 
 portSelector=tkinter.ttk.Combobox(window,values=availPorts)
 
@@ -166,7 +175,7 @@ infoRetrieveFreq=tkinter.ttk.Entry(window)
 
 infoRetrieveFreq.insert(0,'input freqency')
 infoRetrieveFreq.config(foreground='grey')
-infoRetrieveFreq.place(x=0,y=30)
+
 def onFocusEntry(event):
     infoRetrieveFreq.delete(0,tkinter.END)
     infoRetrieveFreq.config(foreground='black')
@@ -175,42 +184,49 @@ def onFocusOut(event):
     infoRetrieveFreq.insert(0,'input freqency')
     infoRetrieveFreq.config(foreground='grey')
 
+getBtAddr=tkinter.ttk.Entry(window)
+getBtAddr.config(foreground='grey')
+
+def onFocusEntryBt(event):
+    getBtAddr.config(foreground='black')
+def onFocusOutBt(event):
+    infoRetrieveFreq.config(foreground='grey')
+
 infoRetrieveFreq.bind('<FocusIn>',onFocusEntry)
 infoRetrieveFreq.bind('<FocusOut>',onFocusOut)
+ 
+getBtAddr.bind('<FocusIn>',onFocusEntryBt)
+getBtAddr.bind('<FocusOut>',onFocusOutBt)
 
 try:
     with open("sensorconfig",'r') as cfgfile:
         cfg=cfgfile.readlines()
-        portSelector.set(cfg[0].strip())
+        getBtAddr.insert(0,cfg[0].strip())
+        portSelector.set(cfg[1].strip())
         infoRetrieveFreq.delete(0,tkinter.END)
-        infoRetrieveFreq.insert(0,float(cfg[1].strip()))
+        infoRetrieveFreq.insert(0,float(cfg[2].strip()))
 
 except FileNotFoundError:
     messagebox.showwarning("Warning","Cfg file not found")
 
 
 textSelectPort=tkinter.Label(window,text="Select Arduino port")
-
 textSelectFreq=tkinter.Label(window,text="refresh Freq, default 2s")
-
 buttonApply=tkinter.Button(window,text="Apply",command=applyButtonOnclick)
-
 buttonSaveCfg=tkinter.Button(window,text="save cfg",command=writeCfg)
+textBtAddr=tkinter.Label(window,text="BT module MAC")
+buttonGetBtMac=tkinter.Button(window,text="BT",command=getBtOnClick)
 
 window.protocol("WM_DELETE_WINDOW", onWindowClose)
 
-textSelectPort.grid(row=0,column=0,sticky='w',columnspan=2)
-portSelector.grid(row=1,column=0,sticky='w',columnspan=2)
-textSelectFreq.grid(row=2,column=0,sticky='w',columnspan=2)
-infoRetrieveFreq.grid(row=3,column=0,sticky='w',columnspan=2)
-buttonApply.grid(row=4,column=0,sticky='w')
-buttonSaveCfg.grid(row=4,column=1,sticky='w')
-
-#textSelectPort.pack()
-#portSelector.pack()
-#textSelectFreq.pack()
-#infoRetrieveFreq.pack()
-#buttonApply.pack()
-#buttonSaveCfg.pack()
+textBtAddr.grid(row=0,column=0,sticky='w',columnspan=3)
+getBtAddr.grid(row=1,column=0,sticky='w',columnspan=3)
+textSelectPort.grid(row=2,column=0,sticky='w',columnspan=3)
+portSelector.grid(row=3,column=0,sticky='w',columnspan=3)
+textSelectFreq.grid(row=4,column=0,sticky='w',columnspan=3)
+infoRetrieveFreq.grid(row=5,column=0,sticky='w',columnspan=3)
+buttonGetBtMac.grid(row=6,column=0,sticky='w')
+buttonApply.grid(row=6,column=1,sticky='w')
+buttonSaveCfg.grid(row=6,column=2,sticky='w')
 
 window.mainloop()

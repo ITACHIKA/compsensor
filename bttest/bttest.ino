@@ -4,7 +4,7 @@ SoftwareSerial btser(2,3);
 
 void setup() {
   // put your setup code here, to run once:
-  btser.begin(38400);
+  btser.begin(9600);
   Serial.begin(9600);
 }
 
