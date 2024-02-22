@@ -60,28 +60,34 @@ def initArduino():
 
 def infoCollectDeliv():
 
-    global ser,firstRun,lastRectime
+    try:
+        global ser,firstRun,lastRectime
 
-    infoCollectTimer=threading.Timer(getStatFreq,infoCollectDeliv)
-    if(newProceStartEvent.is_set()):
-        if(not firstRun):
-            print("reset!")
-            infoCollectTimer.cancel()
-            newProceStartEvent.clear()
-            ser.close()
-            return
-        else:
-            firstRun=False
-            newProceStartEvent.clear()
-    sysStat=getSystemStatus()
-    #print(time.time()-lastRectime)
-    #lastRectime=time.time()
+        infoCollectTimer=threading.Timer(getStatFreq,infoCollectDeliv)
+        if(newProceStartEvent.is_set()):
+            if(not firstRun):
+                print("reset!")
+                infoCollectTimer.cancel()
+                newProceStartEvent.clear()
+                ser.close()
+                return
+            else:
+                firstRun=False
+                newProceStartEvent.clear()
+        sysStat=getSystemStatus()
+        #print(time.time()-lastRectime)
+        #lastRectime=time.time()
 
-    statStr = ",".join(map(str, sysStat))
-    statStr = "data,"+hostname+","+statStr+"\n"
-    print(statStr)
-    statBytes = statStr.encode('utf-8')
-    ser.write(statBytes)
+        statStr = ",".join(map(str, sysStat))
+        statStr = "data,"+hostname+","+statStr+"\n"
+        print(statStr)
+        statBytes = statStr.encode('utf-8')
+        ser.write(statBytes)
+
+    except Exception as e:
+        firstRun=True
+        print(e)
+
 
     infoCollectTimer.start()
 

@@ -7,14 +7,21 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
-DS1302 rtc(6, 7, 8);
+#define RTC_RST 6
+#define RTC_DAT 7
+#define RTC_CLK 8
+
+DS1302 rtc(RTC_RST,RTC_DAT,RTC_CLK);
 
 SoftwareSerial btser(2, 3);
+
+#define EEPROM_ADDR_WRITE 0xA0;
+#define EEPROM_ADDR_READ 0xA1;
+#define EEPROM_I2C_ADDR 0x50;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 void disSysInfo(String cpu, String mem, String netIn, String netOut) {
-  //Serial.print("dispsys");
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
@@ -39,6 +46,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   btser.begin(9600);
+  Wire.begin();
 
   pinMode(4, INPUT);
   pinMode(5, OUTPUT);
@@ -52,7 +60,7 @@ void setup() {
   if(curtime.yr==2000)
   {
     display.clearDisplay();
-    display.setCursor(0, 32);
+    display.setCursor(SCREEN_WIDTH/2-26,SCREEN_HEIGHT/2);
     display.println("RTC Error");
     display.display();
   }
@@ -64,6 +72,7 @@ void loop() {
   if (btser.available())
   {
     String btdata=btser.readStringUntil('\n');
+    String header=strtok(btdata.c_str(),",");
     if(btdata=="poweron")
     {
       digitalWrite(5,HIGH);
@@ -75,6 +84,14 @@ void loop() {
       digitalWrite(5,HIGH);
       delay(5000);
       digitalWrite(5,LOW);
+    }
+    if(header=="Settime")
+    {
+      char* hr=strtok(NULL,",");
+      char* min=strtok(NULL,",");
+      char* sec=strtok(NULL,",");
+      char* timedat=strcat(hr,strcat(min,sec));
+      Serial.println(timedat);
     }
   }
   if (Serial.available()) {
