@@ -19,6 +19,7 @@ lastByteSent=0
 lastRectime=time.time()
 firstRun=True
 ostype=platform.system()
+hostname=""
 
 print(ostype)
 
@@ -38,6 +39,7 @@ def getSystemStatus():
     return [cpuUsage,memUsage,netInMbps,netOutMbps]
 
 def initArduino():
+    global hostname
     #verification
     try:
         hostname=platform.node()
@@ -47,7 +49,7 @@ def initArduino():
         minute=systime.minute
         sec=systime.second
 
-        initStr = ",".join(map(str,[hostname,hour,minute,sec]))
+        initStr = ",".join(map(str,[hour,minute,sec]))
         initStr = "init,"+initStr+"\n"
         print(initStr)
         initBytes = initStr.encode("utf-8")
@@ -76,7 +78,7 @@ def infoCollectDeliv():
     #lastRectime=time.time()
 
     statStr = ",".join(map(str, sysStat))
-    statStr = "data,"+statStr+"\n"
+    statStr = "data,"+hostname+","+statStr+"\n"
     print(statStr)
     statBytes = statStr.encode('utf-8')
     ser.write(statBytes)
@@ -126,7 +128,7 @@ window.title("Arduino Sensor")
 if(ostype=="Windows"):
     window.geometry('190x140')
 else:
-    window.geometry('190x150')
+    window.geometry('210x140')
 window.resizable(False,False)
 
 def onWindowClose():
