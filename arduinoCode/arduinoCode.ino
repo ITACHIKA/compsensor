@@ -11,13 +11,17 @@
 #define RTC_DAT 7
 #define RTC_CLK 8
 
+int BOOT_HR = -1;
+int BOOT_MIN = -1;
+int BOOT_SEC = -1;
+
 DS1302 rtc(RTC_RST,RTC_DAT,RTC_CLK);
 
 SoftwareSerial btser(2, 3);
 
-#define EEPROM_ADDR_WRITE 0xA0;
-#define EEPROM_ADDR_READ 0xA1;
-#define EEPROM_I2C_ADDR 0x50;
+#define EEPROM_ADDR_WRITE 0xA0
+#define EEPROM_ADDR_READ 0xA1
+#define EEPROM_I2C_ADDR 0x50
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
@@ -64,6 +68,20 @@ void setup() {
     display.println("RTC Error");
     display.display();
   }
+  int addr=0;
+  Wire.beginTransmission(EEPROM_I2C_ADDR); // 开始I2C传输
+  Wire.write((int)(addr >> 8));   // 高位地址
+  Wire.write((int)(addr & 0xFF)); // 低位地址
+  Wire.endTransmission(); // 结束传输
+  
+  int length =6;
+  Wire.requestFrom(EEPROM_I2C_ADDR, length); // 从EEPROM请求数据
+  int i = 0;
+  while (Wire.available() && i < length) {
+    data[i] = Wire.read(); // 读取数据并保存到data数组中
+    i++;
+  }
+}
   rtc.writeProtect(false);
 }
 
@@ -85,13 +103,41 @@ void loop() {
       delay(5000);
       digitalWrite(5,LOW);
     }
-    if(header=="Settime")
+    if(header=="Ontime")
     {
       char* hr=strtok(NULL,",");
       char* min=strtok(NULL,",");
       char* sec=strtok(NULL,",");
       char* timedat=strcat(hr,strcat(min,sec));
       Serial.println(timedat);
+      BOOT_HR=atoi(hr);
+      BOOT_MIN=atoi(min);
+      BOOT_SEC=atoi(sec);
+      // 将拼接后的字符串写入 EEPROM
+      int addr = 0;  // EEPROM 的起始地址
+      Wire.beginTransmission(EEPROM_I2C_ADDR);
+      Wire.write((int)(addr >> 8));   // 高位地址
+      Wire.write((int)(addr & 0xFF)); // 低位地址
+      for (int i = 0; i < 6; i++) 
+      {  // 6 是 timedat 的长度
+        Wire.write(timedat[i]);  // 逐个字节写入拼接后的字符串
+      }
+      Wire.endTransmission();
+    }
+    if(header=="Resettime")
+    {
+      BOOT_HR=-1;
+      BOOT_MIN=-1;
+      BOOT_SEC=-1;
+      int addr = 0;  // EEPROM 的起始地址
+      Wire.beginTransmission(EEPROM_I2C_ADDR);
+      Wire.write((int)(addr >> 8));   // 高位地址
+      Wire.write((int)(addr & 0xFF)); // 低位地址
+      for (int i = 0; i < 6; i++) 
+      {  // 6 是 timedat 的长度
+        Wire.write(-1);  //清空
+      }
+      Wire.endTransmission();
     }
   }
   if (Serial.available()) {
