@@ -25,27 +25,6 @@ SoftwareSerial btser(2, 3);
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-void disSysInfo(String cpu, String mem, String netIn, String netOut) {
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 0);
-  display.print("CPU : ");
-  display.print(cpu);
-  display.println("%");
-  display.print("MEM : ");
-  display.print(mem);
-  display.println("%");
-  display.print("Net in: ");
-  display.print(netIn);
-  display.println("Mbps");
-  display.print("Net out: ");
-  display.print(netOut);
-  display.println("Mbps");
-
-  display.display();
-}
-
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -55,12 +34,37 @@ void setup() {
   pinMode(4, INPUT);
   pinMode(5, OUTPUT);
 
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+
+  /*if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;);
-  }
-  disSysInfo("", "", "", "");
+  }*/
+
   Time curtime=rtc.time();
+
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.print("CPU : ");
+  display.println("%");
+  display.print("MEM : ");
+  display.println("%");
+  display.print("Net in: ");
+  display.println("Mbps");
+  display.print("Net out: ");
+  display.println("Mbps");
+  display.display();
+
+  Serial.print(curtime.yr);
+  Serial.print(" ");
+  Serial.print(curtime.hr);
+  Serial.print(" ");
+  Serial.print(curtime.minu);
+  Serial.print(" ");
+  Serial.println(curtime.sec);
+
   if(curtime.yr==2000)
   {
     display.clearDisplay();
@@ -68,6 +72,9 @@ void setup() {
     display.println("RTC Error");
     display.display();
   }
+
+  //recover lost time data
+
   int addr=0;
   Wire.beginTransmission(EEPROM_I2C_ADDR); // 开始I2C传输
   Wire.write((int)(addr >> 8));   // 高位地址
@@ -75,18 +82,35 @@ void setup() {
   Wire.endTransmission(); // 结束传输
   
   int length =6;
+  int timeStr[length];
   Wire.requestFrom(EEPROM_I2C_ADDR, length); // 从EEPROM请求数据
   int i = 0;
-  while (Wire.available() && i < length) {
-    data[i] = Wire.read(); // 读取数据并保存到data数组中
+  while (Wire.available() && i < length) { // 读取数据并保存到数组中
+    timeStr[i]=Wire.read();
     i++;
   }
-}
+
+  if(timeStr[i]!=255)
+  {
+    BOOT_HR=(timeStr[0]-48)*10+(timeStr[1]-48);
+    BOOT_MIN=(timeStr[2]-48)*10+(timeStr[3]-48);
+    BOOT_SEC=(timeStr[4]-48)*10+(timeStr[5]-48);
+    Serial.print(BOOT_HR);
+    Serial.print(BOOT_MIN);
+    Serial.println(BOOT_SEC);
+  }
   rtc.writeProtect(false);
+  TCCR1A = 0; // 设置为正常模式
+  TCCR1B = (1 << WGM12); // 设置为CTC模式
+  OCR1A = 15624; // 设置计数值，使得每1秒溢出一次
+  TIMSK1 = (1 << OCIE1A); // 打开比较匹配中断
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  
+  
   if (btser.available())
   {
     String btdata=btser.readStringUntil('\n');
@@ -143,6 +167,7 @@ void loop() {
   if (Serial.available()) {
     String data = Serial.readStringUntil('\n');
     String header=strtok(data.c_str(),",");
+    //btser.println(data);
     if (header == "init") {
       char* hr = strtok(NULL, ",");
       char* minu = strtok(NULL, ",");
@@ -154,17 +179,26 @@ void loop() {
       rtc.time(newTime);
     }
     if (header == "halt") {
-      disSysInfo("", "", "", "");
+        display.clearDisplay();
+        display.setTextSize(1);
+        display.setTextColor(SSD1306_WHITE);
+        display.setCursor(0, 0);
+        display.print("CPU : ");
+        display.println("%");
+        display.print("MEM : ");
+        display.println("%");
+        display.print("Net in: ");
+        display.println("Mbps");
+        display.print("Net out: ");
+        display.println("Mbps");
+        display.display();
     }
     if (header == "data") {
       char* hostname = strtok(NULL,",");
-      Serial.println(hostname);
       char* cpu = strtok(NULL,",");
       char* mem = strtok(NULL,",");
       char* netIn = strtok(NULL,",");
       char* netOut = strtok(NULL, ",");
-      //disSysInfo(cpu,mem,netIn,netOut);
-      //Serial.print("dispsys");
       display.clearDisplay();
       display.setTextSize(1);
       display.setTextColor(SSD1306_WHITE);
@@ -183,6 +217,11 @@ void loop() {
       display.print(netOut);
       display.println("Mbps");
       display.display();
-    } 
+    }
   }
+}
+
+ISR(TIMER1_COMPA_vect) {
+  
+  Serial.println("定时任务已执行！");
 }
