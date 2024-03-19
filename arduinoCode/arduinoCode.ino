@@ -16,7 +16,6 @@ int BOOT_MIN = -1;
 int BOOT_SEC = -1;
 
 DS1302 rtc(RTC_RST,RTC_DAT,RTC_CLK);
-
 SoftwareSerial btser(2, 3);
 
 #define EEPROM_ADDR_WRITE 0xA0
@@ -31,15 +30,16 @@ void setup() {
   btser.begin(9600);
   Wire.begin();
 
+  TCNT1=0;
+  TCCR1A = 0; 
+  TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10); // WGM12设为1表示CTC模式，CS12和CS10设置预分频器为1024
+  OCR1A = 15624;  // 计算得到的计数器初始值，用于实现1秒的间隔，16MHz的时钟频率和1024的预分频器
+  TIMSK1 = (1 << OCIE1A);  // 开启Timer1的比较中断*/
+
   pinMode(4, INPUT);
   pinMode(5, OUTPUT);
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-
-  /*if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println(F("SSD1306 allocation failed"));
-    for (;;);
-  }*/
 
   Time curtime=rtc.time();
 
@@ -100,17 +100,10 @@ void setup() {
     Serial.println(BOOT_SEC);
   }
   rtc.writeProtect(false);
-  TCCR1A = 0; // 设置为正常模式
-  TCCR1B = (1 << WGM12); // 设置为CTC模式
-  OCR1A = 15624; // 设置计数值，使得每1秒溢出一次
-  TIMSK1 = (1 << OCIE1A); // 打开比较匹配中断
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-
-  
-  
   if (btser.available())
   {
     String btdata=btser.readStringUntil('\n');
@@ -221,7 +214,6 @@ void loop() {
   }
 }
 
-ISR(TIMER1_COMPA_vect) {
-  
-  Serial.println("定时任务已执行！");
-}
+/*ISR(TIMER1_COMPA_vect) {  // Timer1的比较中断服务程序
+  Serial.println("1111sads");  // 在串口上输出消息
+}*/
