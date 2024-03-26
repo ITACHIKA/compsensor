@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 引入 Chart.js -->
+    <script src="./chart.js"></script>
+
+</head>
+<link rel="stylesheet" type="text/css" href="./style.css">
+
+<body>
+    <title>ESP32 WIPMI</title>
+    <header>ESP32 WIPMI</header>
+    <div class="sidebar">
+        <a href="#" id="toggleOverview" >Overview</a>
+        <a href="#" id="toggleManagement">Manage</a>
+    </div>
+    <div id="powerCtrl" class="powerControl">
+        <button>Power On</button>
+        <button>Power Off</button>
+    </div>
+    <div id="genInfo" class="generalInfo">
+        <span>Current Status:</span>
+        <span id="statusText"> NaN</span>
+    </div>
+    <div id="contain1" class="container1">
+        <canvas id="cpuChart"></canvas>
+        <canvas id="memoryChart"></canvas>
+        <canvas id="netInChart"></canvas>
+        <canvas id="netOutChart"></canvas>
+    </div>
+</body>
+
+<script src="./main.js"></script>
+
+</html>
