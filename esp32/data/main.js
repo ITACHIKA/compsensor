@@ -1,6 +1,17 @@
 var ctrlButton=document.getElementById('powerCtrl');
 ctrlButton.style.display='none';
 
+var host = window.location.hostname;
+// 如果你的服务器端口不是默认的 HTTP 端口（80），你也可以获取端口号
+var port = window.location.port;
+// 创建一个完整的 URL，包括协议、主机和端口
+var serverURL = window.location.protocol + "//" + host;
+if (port) {
+    serverURL += ":" + port;
+}
+
+console.log(serverURL);
+
 // 假设这是您的 CPU 和内存使用率数据
 document.getElementById('toggleManagement').addEventListener('click', function(event) {
     event.preventDefault(); // 阻止默认的超链接行为
@@ -13,7 +24,7 @@ document.getElementById('toggleManagement').addEventListener('click', function(e
     // 切换元素的显示状态
     sysinfoPanel.style.display='none';
     ctrlButton.style.display='block';
-    getInfoView.style.display='none';
+    //getInfoView.style.display='none';
 
 });
 
@@ -27,7 +38,7 @@ document.getElementById('toggleOverview').addEventListener('click', function(eve
     // 切换元素的显示状态
     sysinfoPanel.style.display='grid';
     ctrlButton.style.display='none';
-    getInfoView.style.display='block';
+    //getInfoView.style.display='block';
 
 });
 
@@ -123,7 +134,7 @@ var memoryChart = createChartcm(memoryCtx, memoryData);
 var netInChart = createChartnet(netInCtx, netInData);
 var netOutChart = createChartnet(netOutCtx, netOutData);
 
-setInterval(function () {
+function updateGraph (nCpuDat,nMemDat,nNiDat,nNoDat) {
     cpuChart.options.animation = false;
     memoryChart.options.animation = false;
     netInChart.options.animation = 0;
@@ -137,10 +148,10 @@ setInterval(function () {
     // 将时、分、秒拼接成时：分：秒的格式
     var timeString = hours + ':' + minutes + ':' + seconds;
     // 生成新数据点
-    var newCpuData = (Math.random() * 100); // 生成 0 到 100 之间的随机数
-    var newMemoryData = (Math.random() * 100); // 生成 0 到 100 之间的随机数
-    var newNiData = (Math.random() * 10); // 生成 0 到 100 之间的随机数
-    var newNoData = (Math.random() * 10); // 生成 0 到 100 之间的随机数
+    var newCpuData = nCpuDat
+    var newMemoryData = nMemDat
+    var newNiData = nNiDat
+    var newNoData = nNoDat
 
     // 将新数据点添加到图表的末尾
     cpuChart.data.labels.push(timeString);
@@ -171,4 +182,21 @@ setInterval(function () {
     memoryChart.update();
     netInChart.update();
     netOutChart.update();
-}, 3000);
+};
+
+var autoInitConn=setInterval(function initConn(){
+    var xhr=new XMLHttpRequest();
+    xhr.open("GET", serverURL+"init", true);
+    xhr.onload = function() {
+        if (xhr.status == 200) {
+          // 请求成功，处理返回的数据
+          console.log(xhr.responseText);
+          
+          // 在这里解析数据并进行相应的操作
+        } else {
+          // 请求失败，输出错误信息
+          console.error('Request failed: ' + xhr.status);
+        }
+      };
+    //xhr.send();      
+},1000)

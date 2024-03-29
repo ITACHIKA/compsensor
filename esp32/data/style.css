@@ -4,8 +4,9 @@ body {
 }
 
 .container1 {
-    width: 38%;
-    height: 25%;
+    top:90px;
+    width: 39%;
+    height: 500px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 50px;
@@ -22,7 +23,7 @@ body {
     height: 50px;
     line-height: 50px;
     left:20%;
-    text-align: center;
+    /* text-align: center; */
 }
 
 @media only screen and (max-width: 600px) {
@@ -53,7 +54,7 @@ header {
     left: 0;
     width: 15%;
     /* 侧边栏宽度 */
-    height: 100%;
+    height: 120%;
     /* 侧边栏高度 */
     background-color: lightgray;
     /* 侧边栏背景色 */
@@ -62,9 +63,11 @@ header {
 }
 
 .powerControl{
-    position: absolute;
-    top: 80px;
+    position: relative;
+    top: 30px;
     left: 18%;
+    width: 80%;
+    text-align: center;
 }
 
 a{
@@ -77,6 +80,7 @@ a{
     text-decoration: none;   
 }
 .button {
+    margin-right: 20px;
     display: inline-block; /* 设置按钮为行内块元素，使其可以水平排列 */
     padding: 10px 20px; /* 设置按钮内边距，调整按钮大小 */
     font-size: 16px; /* 设置按钮文字大小 */

@@ -2,7 +2,11 @@
 #include <Adafruit_SSD1306.h>
 #include "DS1302.h"
 #include <Wire.h>
-#include "BluetoothSerial.h"
+//#include "BluetoothSerial.h"
+#include <SPIFFS.h>
+#include "ESPAsyncWebServer.h"
+#include <WiFi.h>
+
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -19,15 +23,24 @@ int BOOT_HR = -1;
 int BOOT_MIN = -1;
 int BOOT_SEC = -1;
 
+const char* ssid="ESP32_ITACHIKA";
+const char* pwd="114514";
+
 DS1302 rtc(RTC_RST,RTC_DAT,RTC_CLK);
-BluetoothSerial btser;
+//BluetoothSerial btser;
+AsyncWebServer server(80);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  btser.begin("ESP32");
+  //btser.begin("ESP32");
   pinMode(27,OUTPUT);
+  WiFi.mode(WIFI_MODE_AP);
+  WiFi.softAP(ssid,pwd);
+  IPAddress ip = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(ip);
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
 
   display.clearDisplay();
@@ -79,8 +92,17 @@ void setup() {
   rtc.writeProtect(false);
 }
 
+void web_server(){
+ if(!SPIFFS.begin(true)){
+    Serial.println("SPIFFS发生错误");
+    return;
+  }
+  server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+  server.begin();
+}
+
 void loop() {
-  if (btser.available())
+  /*if (btser.available())
   {
     String btdata=btser.readStringUntil('\n');
     char btArray[btdata.length() + 1]; // +1 是为了存储字符串结尾的空字符
@@ -144,7 +166,7 @@ void loop() {
       btser.print(" Sec:");
       btser.print(BOOT_SEC);
     }
-  }
+  }*/
   // put your main code here, to run repeatedly:
   if (Serial.available()) {
     String data = Serial.readStringUntil('\n');
