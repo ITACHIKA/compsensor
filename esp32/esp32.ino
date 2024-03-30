@@ -23,8 +23,10 @@ int BOOT_HR = -1;
 int BOOT_MIN = -1;
 int BOOT_SEC = -1;
 
-const char* ssid="ESP32_ITACHIKA";
-const char* pwd="114514";
+String APssid="ITACHIKA";
+String APpwd="114514";
+const char* ssid="smast";
+const char* pwd="5085581232";
 
 DS1302 rtc(RTC_RST,RTC_DAT,RTC_CLK);
 //BluetoothSerial btser;
@@ -33,14 +35,12 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+  Serial.begin(115200);
   //btser.begin("ESP32");
   pinMode(27,OUTPUT);
-  WiFi.mode(WIFI_MODE_AP);
-  WiFi.softAP(ssid,pwd);
-  IPAddress ip = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(ip);
+  //WiFi.mode(WIFI_MODE_AP);
+
+
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
 
   display.clearDisplay();
@@ -66,6 +66,10 @@ void setup() {
     display.display();
   }
 
+
+  WiFi.softAP(APssid,APpwd);
+  WiFi.softAPConfig(IPAddress(192,168,0,1), IPAddress(192,168,0,1), IPAddress(255,255,255,0));
+  //WiFi.begin(ssid,pwd);
   //recover lost time data
 
   int addr=0;
@@ -102,6 +106,9 @@ void web_server(){
 }
 
 void loop() {
+  IPAddress ip = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(ip);
   /*if (btser.available())
   {
     String btdata=btser.readStringUntil('\n');

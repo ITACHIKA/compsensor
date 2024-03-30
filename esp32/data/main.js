@@ -198,5 +198,5 @@ var autoInitConn=setInterval(function initConn(){
           console.error('Request failed: ' + xhr.status);
         }
       };
-    //xhr.send();      
+    // xhr.send();      
 },1000)
