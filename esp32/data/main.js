@@ -1,3 +1,5 @@
+var esp32StatFreq=0;
+
 var ctrlButton=document.getElementById('powerCtrl');
 ctrlButton.style.display='none';
 
@@ -112,6 +114,9 @@ function createChartnet(ctx, data) {
         data: data,
         options: {
             scales: {
+                y: {
+                    min: 0
+                },
                 x: {
                     grid: {
                         display: false
@@ -134,7 +139,23 @@ var memoryChart = createChartcm(memoryCtx, memoryData);
 var netInChart = createChartnet(netInCtx, netInData);
 var netOutChart = createChartnet(netOutCtx, netOutData);
 
-function updateGraph (nCpuDat,nMemDat,nNiDat,nNoDat) {
+var espIpText=document.getElementById("espIp");
+espIpText.textContent=serverURL;
+
+function updateGraph (nCpuDat,nMemDat,nNiDat,nNoDat,init) {
+    if(init)
+    {
+        cpuChart.data.labels=[, , , , , , , , ,];
+        memoryChart.data.labels=[, , , , , , , , ,];
+        cpuChart.data.datasets[0].data=[, , , , , , , , ,];
+        memoryChart.data.datasets[0].data=[, , , , , , , , ,];
+        netInChart.data.labels=[, , , , , , , , ,];
+        netOutChart.data.labels=[, , , , , , , , ,];
+        netInChart.data.datasets[0].data=[, , , , , , , , ,];
+        netOutChart.data.datasets[0].data=[, , , , , , , , ,];
+        return;
+    }
+    
     cpuChart.options.animation = false;
     memoryChart.options.animation = false;
     netInChart.options.animation = 0;
@@ -184,19 +205,67 @@ function updateGraph (nCpuDat,nMemDat,nNiDat,nNoDat) {
     netOutChart.update();
 };
 
-var autoInitConn=setInterval(function initConn(){
+var autoInitConn;
+var getDisDataIntv;
+
+function getDispData(){
     var xhr=new XMLHttpRequest();
-    xhr.open("GET", serverURL+"init", true);
+    xhr.open("GET", serverURL+"/data", true);
+    xhr.onload = function() {
+        if (xhr.status == 200) {
+            console.log(xhr.responseText);
+            var statList = this.responseText.split(",");
+            if(parseInt(statList[0])!=esp32StatFreq)
+            {
+                if(parseInt(statList[0])==-1)
+                {
+                    clearInterval(getDisDataIntv);
+                    document.getElementById("statusText").textContent="Disconnected / Powered off";
+                    document.getElementById("sysName").textContent="Nan";
+                    autoInitConn=setInterval(initConn,1000);
+                }
+                else
+                {
+                    clearInterval(getDisDataIntv);
+                    esp32StatFreq=parseInt(statList[0]);
+                    getDisDataIntv=setInterval(getDispData,esp32StatFreq*1000);
+                }
+            }
+            else
+            {
+                var mfName=document.getElementById("sysName");
+                mfName.textContent=statList[1];
+                updateGraph(statList[2],statList[3],statList[4],statList[4],0);
+            }
+        } else {
+          console.error('Request failed: ' + xhr.status);
+        }
+      };
+    xhr.send();
+}
+
+function initConn(){
+    var xhr=new XMLHttpRequest();
+    xhr.open("GET", serverURL+"/init", true);
     xhr.onload = function() {
         if (xhr.status == 200) {
           // 请求成功，处理返回的数据
           console.log(xhr.responseText);
-          
           // 在这里解析数据并进行相应的操作
+          if(this.responseText!="-1")
+          {
+            esp32StatFreq=parseInt(this.responseText);
+            clearInterval(autoInitConn);
+            document.getElementById("statusText").textContent="Connected";
+            updateGraph(-1,-1,-1,-1,1);
+            getDisDataIntv=setInterval(getDispData,esp32StatFreq*1000);
+          }
         } else {
           // 请求失败，输出错误信息
           console.error('Request failed: ' + xhr.status);
         }
       };
-    // xhr.send();      
-},1000)
+    xhr.send();
+}
+
+autoInitConn=setInterval(initConn,1000);

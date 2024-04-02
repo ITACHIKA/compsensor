@@ -8,6 +8,7 @@ import psutil
 import tkinter
 import tkinter.ttk
 import re
+import sys
 from tkinter import messagebox
 from datetime import datetime
 
@@ -50,7 +51,7 @@ def initArduino():
         sec=systime.second
 
         initStr = ",".join(map(str,[hour,minute,sec]))
-        initStr = "init,"+initStr+"\n"
+        initStr = "init,"+initStr+","+str(getStatFreq)+"\n"
         print(initStr)
         initBytes = initStr.encode("utf-8")
         ser.write(initBytes)
@@ -102,7 +103,7 @@ def applyButtonOnclick():
         #connect to serial
         global ser
         try: 
-            ser=serial.Serial(port=portSelector.get(),baudrate=9600,timeout=2)
+            ser=serial.Serial(port=portSelector.get(),baudrate=115200,timeout=2)
             print(portSelector.get())
         except Exception as e:
             messagebox.showerror("error",e)
@@ -142,6 +143,8 @@ def onWindowClose():
     newProceStartEvent.set()
     shutData="halt"
     ser.write(shutData.encode('utf-8'))
+    sys.exit()
+
 
 portSelector=tkinter.ttk.Combobox(window,values=availPorts)
 
@@ -184,7 +187,7 @@ except FileNotFoundError:
 
 
 textSelectPort=tkinter.Label(window,text="Select Arduino port")
-textSelectFreq=tkinter.Label(window,text="refresh Freq, default 2s")
+textSelectFreq=tkinter.Label(window,text="refresh Freq, default 2s (no decimal)")
 buttonApply=tkinter.Button(window,text="Apply",command=applyButtonOnclick)
 buttonSaveCfg=tkinter.Button(window,text="save cfg",command=writeCfg)
 

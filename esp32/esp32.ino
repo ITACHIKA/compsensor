@@ -7,7 +7,6 @@
 #include "ESPAsyncWebServer.h"
 #include <WiFi.h>
 
-
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
@@ -23,23 +22,63 @@ int BOOT_HR = -1;
 int BOOT_MIN = -1;
 int BOOT_SEC = -1;
 
-String APssid="ITACHIKA";
-String APpwd="114514";
-const char* ssid="smast";
-const char* pwd="5085581232";
+String curHostname="NaN";
+double curCpu=0;
+double curMem=0;
+double curNetOut=0;
+double curNetIn=0;
+int getStatFreq=-1;
 
-DS1302 rtc(RTC_RST,RTC_DAT,RTC_CLK);
+String APssid = "ITACHIKA_ESP32";
+String APpwd = "1145141919";
+const char* ssid = "itachikaK40";
+const char* pwd = "11111111";
+
+DS1302 rtc(RTC_RST, RTC_DAT, RTC_CLK);
 //BluetoothSerial btser;
 AsyncWebServer server(80);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+void initApWifi() {
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(APssid, APpwd);
+  WiFi.softAPConfig(IPAddress(192, 168, 0, 1), IPAddress(192, 168, 0, 1), IPAddress(255, 255, 255, 0));
+  IPAddress ip = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(ip);
+}
+
+void initStaWifi() {
+  WiFi.begin(ssid, pwd);
+  Serial.print("Connecting to designated AP");
+  while(WiFi.status()!=WL_CONNECTED)
+  {
+    Serial.print(".");
+  }
+  Serial.print("Connected");
+  IPAddress ip = WiFi.localIP();
+  Serial.print("Sta IP address: ");
+  Serial.println(ip);
+}
+
+void httpServer()
+{
+  server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+  server.on("/init", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", String(getStatFreq));
+  });
+  server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", String(getStatFreq)+","+String(curHostname)+","+String(curCpu)+","+String(curMem)+","+String(curNetIn)+","+String(curNetOut));
+  });
+  server.begin();
+  Serial.println("HTTP server started");
+}
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   //btser.begin("ESP32");
-  pinMode(27,OUTPUT);
-  //WiFi.mode(WIFI_MODE_AP);
-
+  pinMode(27, OUTPUT);
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
 
@@ -57,58 +96,50 @@ void setup() {
   display.println("Mbps");
   display.display();
 
-  Time curtime=rtc.time();
-  if(curtime.yr==2000)
-  {
+  Time curtime = rtc.time();
+  if (curtime.yr == 2000) {
     display.clearDisplay();
-    display.setCursor(SCREEN_WIDTH/2-26,SCREEN_HEIGHT/2);
+    display.setCursor(SCREEN_WIDTH / 2 - 26, SCREEN_HEIGHT / 2);
     display.println("RTC Error");
     display.display();
   }
 
-
-  WiFi.softAP(APssid,APpwd);
-  WiFi.softAPConfig(IPAddress(192,168,0,1), IPAddress(192,168,0,1), IPAddress(255,255,255,0));
-  //WiFi.begin(ssid,pwd);
   //recover lost time data
 
-  int addr=0;
-  Wire.beginTransmission(EEPROM_I2C_ADDR); // 开始I2C传输
-  Wire.write((int)(addr >> 8));   // 高位地址
-  Wire.write((int)(addr & 0xFF)); // 低位地址
-  Wire.endTransmission(); // 结束传输
-  
-  int length =6;
+  int addr = 0;
+  Wire.beginTransmission(EEPROM_I2C_ADDR);  // 开始I2C传输
+  Wire.write((int)(addr >> 8));             // 高位地址
+  Wire.write((int)(addr & 0xFF));           // 低位地址
+  Wire.endTransmission();                   // 结束传输
+
+  int length = 6;
   int timeStr[length];
-  Wire.requestFrom(EEPROM_I2C_ADDR, length); // 从EEPROM请求数据
+  Wire.requestFrom(EEPROM_I2C_ADDR, length);  // 从EEPROM请求数据
   int i = 0;
-  while (Wire.available() && i < length) { // 读取数据并保存到数组中
-    timeStr[i]=Wire.read();
+  while (Wire.available() && i < length) {  // 读取数据并保存到数组中
+    timeStr[i] = Wire.read();
     i++;
   }
 
-  if(timeStr[i]!=255)
-  {
-    BOOT_HR=(timeStr[0]-48)*10+(timeStr[1]-48);
-    BOOT_MIN=(timeStr[2]-48)*10+(timeStr[3]-48);
-    BOOT_SEC=(timeStr[4]-48)*10+(timeStr[5]-48);
+  if (timeStr[i] != 255) {
+    BOOT_HR = (timeStr[0] - 48) * 10 + (timeStr[1] - 48);
+    BOOT_MIN = (timeStr[2] - 48) * 10 + (timeStr[3] - 48);
+    BOOT_SEC = (timeStr[4] - 48) * 10 + (timeStr[5] - 48);
   }
+  
   rtc.writeProtect(false);
-}
 
-void web_server(){
- if(!SPIFFS.begin(true)){
-    Serial.println("SPIFFS发生错误");
-    return;
-  }
-  server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
-  server.begin();
+  initApWifi();
+  //initStaWifi();
+
+  SPIFFS.begin();
+
+  httpServer();
+  
 }
 
 void loop() {
-  IPAddress ip = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(ip);
+  //server.handleClient();
   /*if (btser.available())
   {
     String btdata=btser.readStringUntil('\n');
@@ -177,7 +208,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   if (Serial.available()) {
     String data = Serial.readStringUntil('\n');
-    char dataArray[data.length() + 1]; // +1 是为了存储字符串结尾的空字符
+    char dataArray[data.length() + 1];  // +1 是为了存储字符串结尾的空字符
     data.toCharArray(dataArray, sizeof(dataArray));
     String header = strtok(dataArray, ",");
     //Serial.println(data);
@@ -187,33 +218,42 @@ void loop() {
       char* hr = strtok(NULL, ",");
       char* minu = strtok(NULL, ",");
       char* sec = strtok(NULL, ",");
-      Serial.print("h"+String(hr));
-      Serial.print("m"+String(minu));
-      Serial.print("s"+String(sec));
-      //Time newTime(2024,1,1,atoi(hr),atoi(minu),atoi(sec),1);
-      //rtc.time(newTime);
+      getStatFreq=atoi(strtok(NULL,","));
+      Serial.print("h" + String(hr));
+      Serial.print("m" + String(minu));
+      Serial.print("s" + String(sec));
+      Serial.println();
+      Serial.println(getStatFreq);
+      Time newTime(2024,1,1,atoi(hr),atoi(minu),atoi(sec),Time::kSunday);
+      rtc.time(newTime);
     }
     if (header == "halt") {
-        display.clearDisplay();
-        display.setTextSize(1);
-        display.setTextColor(SSD1306_WHITE);
-        display.setCursor(0, 0);
-        display.print("CPU : ");
-        display.println("%");
-        display.print("MEM : ");
-        display.println("%");
-        display.print("Net in: ");
-        display.println("Mbps");
-        display.print("Net out: ");
-        display.println("Mbps");
-        display.display();
+      getStatFreq=-1;
+      display.clearDisplay();
+      display.setTextSize(1);
+      display.setTextColor(SSD1306_WHITE);
+      display.setCursor(0, 0);
+      display.print("CPU : ");
+      display.println("%");
+      display.print("MEM : ");
+      display.println("%");
+      display.print("Net in: ");
+      display.println("Mbps");
+      display.print("Net out: ");
+      display.println("Mbps");
+      display.display();
     }
     if (header == "data") {
-      char* hostname = strtok(NULL,",");
-      char* cpu = strtok(NULL,",");
-      char* mem = strtok(NULL,",");
-      char* netIn = strtok(NULL,",");
+      char* hostname = strtok(NULL, ",");
+      char* cpu = strtok(NULL, ",");
+      char* mem = strtok(NULL, ",");
+      char* netIn = strtok(NULL, ",");
       char* netOut = strtok(NULL, ",");
+      curHostname=String(hostname);
+      curCpu=atof(cpu);
+      curMem=atof(mem);
+      curNetIn=atof(netIn);
+      curNetOut=atof(netOut);
       display.clearDisplay();
       display.setTextSize(1);
       display.setTextColor(SSD1306_WHITE);
@@ -224,7 +264,7 @@ void loop() {
       display.println("%");
       display.print("MEM : ");
       display.print(mem);
-      display.println("%"); 
+      display.println("%");
       display.print("Net in: ");
       display.print(netIn);
       display.println("Mbps");
