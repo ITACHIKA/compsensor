@@ -20,9 +20,8 @@ body {
 .generalInfo{
     position:relative;
     width: 80%;
-    height: 50px;
     line-height: 50px;
-    left:20%;
+    margin-left: 75px;
     /* text-align: center; */
 }
 
@@ -32,9 +31,10 @@ body {
     }
 }
 
-canvas {
-    margin: 10px auto;
-    display: block;
+.chart-canvas {
+    width: 90%; /* 设置 canvas 宽度为父元素宽度的100% */
+    height: 300px; /* 设置 canvas 高度为固定值，或者根据需要调整 */
+    margin:10px;
 }
 
 header {
@@ -49,23 +49,12 @@ header {
 }
 
 .sidebar {
-    position: absolute;
-    top: 73px;
-    left: 0;
-    width: 15%;
-    /* 侧边栏宽度 */
-    height: 120%;
-    /* 侧边栏高度 */
     background-color: lightgray;
-    /* 侧边栏背景色 */
-    z-index: 1;
-    /* 确保侧边栏位于容器之上 */
+    height: 1000px;
+    padding: 0 !important
 }
 
 .powerControl{
-    position: relative;
-    top: 30px;
-    left: 18%;
     width: 80%;
     text-align: center;
 }
@@ -77,7 +66,7 @@ a{
     background-color: turquoise;
     text-align: center;
     margin-top: 5px;
-    text-decoration: none;   
+    text-decoration: none !important 
 }
 .button {
     margin-right: 20px;

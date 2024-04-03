@@ -6,39 +6,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- 引入 Chart.js -->
     <script src="./chart.js"></script>
+    <script src="./bootstrap.min.js"></script>
 
 </head>
 <link rel="stylesheet" type="text/css" href="./style.css">
+<link rel="stylesheet" type="text/css" href="./bootstrap.min.css">
 
 <body>
     <title>ESP32 WIPMI</title>
-    <header>ESP32 WIPMI</header>
-    <div class="sidebar">
-        <!-- <a href="./data">asd</a> -->
-        <a href="#" id="toggleOverview" >Overview</a>
-        <a href="#" id="toggleManagement">Manage</a>
+    <header class="col-md-12">ESP32 WIPMI</header>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="sidebar col-md-1 col-sm-2">
+                <!-- <a href="./data">asd</a> -->
+                <a href="#" id="toggleOverview" >Overview</a>
+                <a href="#" id="toggleManagement">Manage</a>
+            </div>
+            <div class="main-content col-md-11 col-sm-10">
+                <div id="genInfo" class="generalInfo">
+                    <span>ESP32 IP: </span>
+                    <span id="espIp">Nan</span>
+                    <br>
+                    <span>Mainframe Name:</span>
+                    <span id="sysName"> NaN</span>
+                    <br>
+                    <span>Current Status:</span>
+                    <span id="statusText"> Disconnected / Powered off</span>
+                </div>
+                <div id="powerCtrl" class="powerControl">
+                    <button>Power On</button>
+                    <button>Power Off</button>
+                </div>
+                <div class="container" id="contain1">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="cpuChart" class="chart-canvas"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="memoryChart" class="chart-canvas"></canvas>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="netInChart" class="chart-canvas"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="netOutChart" class="chart-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div id="genInfo" class="generalInfo">
-        <span>ESP32 IP: </span>
-        <span id="espIp">Nan</span>
-        <br>
-        <span>Mainframe Name:</span>
-        <span id="sysName"> Nan</span>
-        <br>
-        <span>Current Status:</span>
-        <span id="statusText"> Disconnected / Powered off</span>
-    </div>
-    <div id="powerCtrl" class="powerControl">
-        <button>Power On</button>
-        <button>Power Off</button>
-    </div>
-    <div id="contain1" class="container1">
-        <canvas id="cpuChart"></canvas>
-        <canvas id="memoryChart"></canvas>
-        <canvas id="netInChart"></canvas>
-        <canvas id="netOutChart"></canvas>
-    </div>
-
 </body>
 
 <script src="./main.js"></script>

@@ -221,7 +221,7 @@ function getDispData(){
                 {
                     clearInterval(getDisDataIntv);
                     document.getElementById("statusText").textContent="Disconnected / Powered off";
-                    document.getElementById("sysName").textContent="Nan";
+                    document.getElementById("sysName").textContent="NaN";
                     autoInitConn=setInterval(initConn,1000);
                 }
                 else
@@ -268,4 +268,4 @@ function initConn(){
     xhr.send();
 }
 
-autoInitConn=setInterval(initConn,1000);
+//autoInitConn=setInterval(initConn,1000);
