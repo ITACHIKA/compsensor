@@ -10,7 +10,7 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
-#define RTC_RST 5
+#define RTC_RST 17
 #define RTC_DAT 4
 #define RTC_CLK 2
 
@@ -31,8 +31,8 @@ int getStatFreq=-1;
 
 String APssid = "ITACHIKA_ESP32";
 String APpwd = "1145141919";
-const char* ssid = "itachikaK40";
-const char* pwd = "11111111";
+const char* ssid = "smast";
+const char* pwd = "5085581232";
 
 DS1302 rtc(RTC_RST, RTC_DAT, RTC_CLK);
 //BluetoothSerial btser;
@@ -44,7 +44,7 @@ void initApWifi() {
   WiFi.softAP(APssid, APpwd);
   WiFi.softAPConfig(IPAddress(192, 168, 0, 1), IPAddress(192, 168, 0, 1), IPAddress(255, 255, 255, 0));
   IPAddress ip = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
+  Serial.print("Initiating in AP mode.\nAP IP address: ");
   Serial.println(ip);
 }
 
@@ -54,8 +54,9 @@ void initStaWifi() {
   while(WiFi.status()!=WL_CONNECTED)
   {
     Serial.print(".");
+    delay(200);
   }
-  Serial.print("Connected");
+  Serial.println("Connected");
   IPAddress ip = WiFi.localIP();
   Serial.print("Sta IP address: ");
   Serial.println(ip);

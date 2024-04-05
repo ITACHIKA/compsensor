@@ -235,7 +235,7 @@ function getDispData(){
             {
                 var mfName=document.getElementById("sysName");
                 mfName.textContent=statList[1];
-                updateGraph(statList[2],statList[3],statList[4],statList[4],0);
+                updateGraph(statList[2],statList[3],statList[4],statList[5],0);
             }
         } else {
           console.error('Request failed: ' + xhr.status);
@@ -268,4 +268,4 @@ function initConn(){
     xhr.send();
 }
 
-//autoInitConn=setInterval(initConn,1000);
+autoInitConn=setInterval(initConn,1000);
