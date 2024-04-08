@@ -269,3 +269,33 @@ function initConn(){
 }
 
 autoInitConn=setInterval(initConn,1000);
+
+document.getElementById('poweronButton').addEventListener('click', function() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', serverURL+'/poweron', true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                console.log('Request succeeded:', xhr.responseText);
+            } else {
+                console.error('Request failed:', xhr.status);
+            }
+        }
+    };
+    xhr.send();
+});
+
+document.getElementById('poweroffButton').addEventListener('click', function() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', serverURL+'/poweroff', true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                console.log('Request succeeded:', xhr.responseText);
+            } else {
+                console.error('Request failed:', xhr.status);
+            }
+        }
+    };
+    xhr.send();
+});

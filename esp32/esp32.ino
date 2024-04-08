@@ -71,6 +71,19 @@ void httpServer()
   server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "text/plain", String(getStatFreq)+","+String(curHostname)+","+String(curCpu)+","+String(curMem)+","+String(curNetIn)+","+String(curNetOut));
   });
+  server.on("/poweroff", HTTP_GET, [](AsyncWebServerRequest *request){
+  digitalWrite(12, HIGH);
+  delay(5000);
+  digitalWrite(12,LOW);
+  request->send(200, "text/plain", "Device powered off"); // 发送响应
+});
+  server.on("/poweron", HTTP_GET, [](AsyncWebServerRequest *request){
+  digitalWrite(12, HIGH);
+  delay(500);
+  digitalWrite(12,LOW);
+  request->send(200, "text/plain", "Device powered on"); // 发送响应
+});
+
   server.begin();
   Serial.println("HTTP server started");
 }
@@ -79,7 +92,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   //btser.begin("ESP32");
-  pinMode(27, OUTPUT);
+  pinMode(12, OUTPUT);
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
 
