@@ -21,6 +21,7 @@
                 <!-- <a href="./data">asd</a> -->
                 <a href="#" id="toggleOverview" >Monitor</a>
                 <a href="#" id="toggleManagement">Manage</a>
+                <a href="#" id="toggleSetting">Settings</a>
             </div>
             <div class="main-content col-md-11 col-sm-10">
                 <div id="genInfo" class="generalInfo">
@@ -33,9 +34,45 @@
                     <span>Current Status:</span>
                     <span id="statusText"> Disconnected / Powered off</span>
                 </div>
+                <div id="divLine1" class="divLine"></div>
                 <div id="powerCtrl" class="powerControl">
                     <button id="poweronButton">Power On</button>
                     <button id="poweroffButton">Power Off</button>
+                </div>
+                <div id="espSettings" class="espSettings">
+                    <span>Current Network Mode:</span>
+                    <span id="espNetType"> NaN</span>
+                    <br>
+                    <div id="apMode" class="apMode">
+                        <span>AP SSID Name:</span>
+                        <span id="apSSID">NaN</span>
+                        <br>
+                        <span>AP password Name:</span>
+                        <span id="apPWD">NaN</span>
+                    </div>
+                    <div id="staMode" class="staMode">
+                        <span>Router SSID Name:</span>
+                        <span id="staSSID">NaN</span>
+                        <br>
+                        <span>Router password Name:</span>
+                        <span id="staPWD">NaN</span>
+                    </div>
+                </div>
+                <div id="divLine2" class="divLine"></div>
+                <div id="remoteBoot">
+                    <span>Auto boot time:</span>
+                    <input id="bootHr" type="number" min="-1" max="24" step="1">
+                    <input id="bootMin" type="number" min="-1" max="60" step="1">
+                    <input id="bootSec" type="number" min="-1" max="60" step="1">
+                    <button id="bootTimeSet">Set</button>
+                </div>
+                <br>
+                <div id="remoteOff">
+                    <span>Auto off time:</span>
+                    <input id="offHr" type="number" min="-1" max="24" step="1">
+                    <input id="offMin" type="number" min="-1" max="60" step="1">
+                    <input id="offSec" type="number" min="-1" max="60" step="1">
+                    <button id="offTimeSet">Set</button>
                 </div>
                 <div class="container" id="contain1">
                     <div class="row">

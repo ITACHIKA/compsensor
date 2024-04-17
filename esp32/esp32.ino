@@ -6,6 +6,8 @@
 #include <SPIFFS.h>
 #include "ESPAsyncWebServer.h"
 #include <WiFi.h>
+#include <Arduino.h>
+#include <esp_timer.h>
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -39,6 +41,15 @@ DS1302 rtc(RTC_RST, RTC_DAT, RTC_CLK);
 AsyncWebServer server(80);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
+void powerOffTask(void * parameter) {
+  // 将针脚设置为输出模式
+  digitalWrite(12, HIGH);
+  vTaskDelay(pdMS_TO_TICKS(5000));
+  digitalWrite(12, LOW);
+  Serial.println("asdasdd");
+
+}
+
 void initApWifi() {
   WiFi.mode(WIFI_AP);
   WiFi.softAP(APssid, APpwd);
@@ -62,9 +73,52 @@ void initStaWifi() {
   Serial.println(ip);
 }
 
+void handlePostRequest(AsyncWebServerRequest *request) {
+  // 检查请求类型是否为 POST
+  if (request->method() == HTTP_POST) {
+    Serial.println("POST request received");
+
+    // 检查请求是否有正文
+    if (request->hasParam("data", true)) {
+      AsyncWebParameter* param = request->getParam("data", true);
+      String data = param->value();
+
+      // 在这里对接收到的数据进行处理
+      Serial.println("Received data: " + data);
+      char dataArray[data.length() + 1];  // +1 是为了存储字符串结尾的空字符
+      data.toCharArray(dataArray, sizeof(dataArray));
+      String header = strtok(dataArray, ",");
+      if(header=="onTime")
+      {
+
+      }
+      if(header=="offTime")
+      {
+
+      }
+      if(header=="apSet")
+      {
+
+      }
+      if(header=="staSet")
+      {
+        
+      }
+
+      // 发送响应
+      request->send(200, "text/plain", "Setting received");
+    } else {
+      request->send(400, "text/plain", "No data received");
+    }
+  } else {
+    request->send(405, "text/plain", "Method Not Allowed");
+  }
+}
+
 void httpServer()
 {
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+  server.on("/", HTTP_POST, handlePostRequest);
   server.on("/init", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "text/plain", String(getStatFreq));
   });
@@ -72,11 +126,18 @@ void httpServer()
     request->send(200, "text/plain", String(getStatFreq)+","+String(curHostname)+","+String(curCpu)+","+String(curMem)+","+String(curNetIn)+","+String(curNetOut));
   });
   server.on("/poweroff", HTTP_GET, [](AsyncWebServerRequest *request){
-  digitalWrite(12, HIGH);
-  delay(5000);
-  digitalWrite(12,LOW);
+  xTaskCreatePinnedToCore(
+    powerOffTask,   // 任务函数
+    "PowerOffTask", // 任务名称
+    1000,          // 堆栈大小（字节）
+    NULL,           // 任务参数
+    1,              // 任务优先级
+    NULL,           // 任务句柄
+    0               // 核心编号（0 或 1）
+  );
+  Serial.println("asdasdd22222");
   request->send(200, "text/plain", "Device powered off"); // 发送响应
-});
+  });
   server.on("/poweron", HTTP_GET, [](AsyncWebServerRequest *request){
   digitalWrite(12, HIGH);
   delay(500);
@@ -140,6 +201,10 @@ void setup() {
     BOOT_MIN = (timeStr[2] - 48) * 10 + (timeStr[3] - 48);
     BOOT_SEC = (timeStr[4] - 48) * 10 + (timeStr[5] - 48);
   }
+
+  Serial.print(BOOT_HR);
+  Serial.print(BOOT_MIN);
+  Serial.println(BOOT_SEC);
   
   rtc.writeProtect(false);
 
@@ -153,25 +218,6 @@ void setup() {
 }
 
 void loop() {
-  //server.handleClient();
-  /*if (btser.available())
-  {
-    String btdata=btser.readStringUntil('\n');
-    char btArray[btdata.length() + 1]; // +1 是为了存储字符串结尾的空字符
-    btdata.toCharArray(btArray, sizeof(btArray));
-    String header = strtok(btArray, ",");
-    if(btdata=="poweron")
-    {
-      digitalWrite(27,HIGH);
-      delay(500);
-      digitalWrite(27,LOW);
-    }
-    if(btdata=="poweroff")
-    {
-      digitalWrite(27,HIGH);
-      delay(5000);
-      digitalWrite(27,LOW);
-    }
     if(header=="ontime")
     {
       char* hr=strtok(NULL,",");
@@ -218,7 +264,7 @@ void loop() {
       btser.print(" Sec:");
       btser.print(BOOT_SEC);
     }
-  }*/
+  }
   // put your main code here, to run repeatedly:
   if (Serial.available()) {
     String data = Serial.readStringUntil('\n');

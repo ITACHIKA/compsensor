@@ -1,7 +1,9 @@
-var esp32StatFreq=0;
+var esp32StatFreq = 0;
 
-var ctrlButton=document.getElementById('powerCtrl');
-ctrlButton.style.display='none';
+var ctrlButton = document.getElementById('powerCtrl');
+var espSettingPage = document.getElementById('espSettings');
+ctrlButton.style.display = 'none';
+espSettingPage.style.display = 'none';
 
 var host = window.location.hostname;
 // 如果你的服务器端口不是默认的 HTTP 端口（80），你也可以获取端口号
@@ -15,31 +17,51 @@ if (port) {
 console.log(serverURL);
 
 // 假设这是您的 CPU 和内存使用率数据
-document.getElementById('toggleManagement').addEventListener('click', function(event) {
+document.getElementById('toggleManagement').addEventListener('click', function (event) {
     event.preventDefault(); // 阻止默认的超链接行为
 
     // 获取需要切换显示状态的元素
     var sysinfoPanel = document.getElementById('contain1');
-    var ctrlButton=document.getElementById('powerCtrl');
-    var getInfoView=document.getElementById('genInfo');
+    var ctrlButton = document.getElementById('powerCtrl');
+    var espSettingPage = document.getElementById('espSettings');
+    var getInfoView = document.getElementById('genInfo');
 
     // 切换元素的显示状态
-    sysinfoPanel.style.display='none';
-    ctrlButton.style.display='block';
+    sysinfoPanel.style.display = 'none';
+    ctrlButton.style.display = 'block';
+    espSettingPage.style.display = 'none';
     //getInfoView.style.display='none';
 
 });
 
-document.getElementById('toggleOverview').addEventListener('click', function(event) {
+document.getElementById('toggleOverview').addEventListener('click', function (event) {
     event.preventDefault(); // 阻止默认的超链接行为
 
     var sysinfoPanel = document.getElementById('contain1');
-    var ctrlButton=document.getElementById('powerCtrl');
-    var getInfoView=document.getElementById('genInfo');
+    var ctrlButton = document.getElementById('powerCtrl');
+    var getInfoView = document.getElementById('genInfo');
+    var espSettingPage = document.getElementById('espSettings');
 
     // 切换元素的显示状态
-    sysinfoPanel.style.display='grid';
-    ctrlButton.style.display='none';
+    sysinfoPanel.style.display = 'grid';
+    ctrlButton.style.display = 'none';
+    espSettingPage.style.display = 'none';
+    //getInfoView.style.display='block';
+
+});
+
+document.getElementById('toggleSetting').addEventListener('click', function (event) {
+    event.preventDefault(); // 阻止默认的超链接行为
+
+    var sysinfoPanel = document.getElementById('contain1');
+    var ctrlButton = document.getElementById('powerCtrl');
+    var getInfoView = document.getElementById('genInfo');
+    var espSettingPage = document.getElementById('espSettings');
+
+    // 切换元素的显示状态
+    sysinfoPanel.style.display = 'none';
+    ctrlButton.style.display = 'none';
+    espSettingPage.style.display = 'block';
     //getInfoView.style.display='block';
 
 });
@@ -139,23 +161,22 @@ var memoryChart = createChartcm(memoryCtx, memoryData);
 var netInChart = createChartnet(netInCtx, netInData);
 var netOutChart = createChartnet(netOutCtx, netOutData);
 
-var espIpText=document.getElementById("espIp");
-espIpText.textContent=serverURL;
+var espIpText = document.getElementById("espIp");
+espIpText.textContent = serverURL;
 
-function updateGraph (nCpuDat,nMemDat,nNiDat,nNoDat,init) {
-    if(init)
-    {
-        cpuChart.data.labels=[, , , , , , , , ,];
-        memoryChart.data.labels=[, , , , , , , , ,];
-        cpuChart.data.datasets[0].data=[, , , , , , , , ,];
-        memoryChart.data.datasets[0].data=[, , , , , , , , ,];
-        netInChart.data.labels=[, , , , , , , , ,];
-        netOutChart.data.labels=[, , , , , , , , ,];
-        netInChart.data.datasets[0].data=[, , , , , , , , ,];
-        netOutChart.data.datasets[0].data=[, , , , , , , , ,];
+function updateGraph(nCpuDat, nMemDat, nNiDat, nNoDat, init) {
+    if (init) {
+        cpuChart.data.labels = [, , , , , , , , ,];
+        memoryChart.data.labels = [, , , , , , , , ,];
+        cpuChart.data.datasets[0].data = [, , , , , , , , ,];
+        memoryChart.data.datasets[0].data = [, , , , , , , , ,];
+        netInChart.data.labels = [, , , , , , , , ,];
+        netOutChart.data.labels = [, , , , , , , , ,];
+        netInChart.data.datasets[0].data = [, , , , , , , , ,];
+        netOutChart.data.datasets[0].data = [, , , , , , , , ,];
         return;
     }
-    
+
     cpuChart.options.animation = false;
     memoryChart.options.animation = false;
     netInChart.options.animation = 0;
@@ -208,72 +229,67 @@ function updateGraph (nCpuDat,nMemDat,nNiDat,nNoDat,init) {
 var autoInitConn;
 var getDisDataIntv;
 
-function getDispData(){
-    var xhr=new XMLHttpRequest();
-    xhr.open("GET", serverURL+"/data", true);
-    xhr.onload = function() {
+function getDispData() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", serverURL + "/data", true);
+    xhr.onload = function () {
         if (xhr.status == 200) {
             console.log(xhr.responseText);
             var statList = this.responseText.split(",");
-            if(parseInt(statList[0])!=esp32StatFreq)
-            {
-                if(parseInt(statList[0])==-1)
-                {
+            if (parseInt(statList[0]) != esp32StatFreq) {
+                if (parseInt(statList[0]) == -1) {
                     clearInterval(getDisDataIntv);
-                    document.getElementById("statusText").textContent="Disconnected / Powered off";
-                    document.getElementById("sysName").textContent="NaN";
-                    autoInitConn=setInterval(initConn,1000);
+                    document.getElementById("statusText").textContent = "Disconnected / Powered off";
+                    document.getElementById("sysName").textContent = "NaN";
+                    autoInitConn = setInterval(initConn, 1000);
                 }
-                else
-                {
+                else {
                     clearInterval(getDisDataIntv);
-                    esp32StatFreq=parseInt(statList[0]);
-                    getDisDataIntv=setInterval(getDispData,esp32StatFreq*1000);
+                    esp32StatFreq = parseInt(statList[0]);
+                    getDisDataIntv = setInterval(getDispData, esp32StatFreq * 1000);
                 }
             }
-            else
-            {
-                var mfName=document.getElementById("sysName");
-                mfName.textContent=statList[1];
-                updateGraph(statList[2],statList[3],statList[4],statList[5],0);
+            else {
+                var mfName = document.getElementById("sysName");
+                mfName.textContent = statList[1];
+                updateGraph(statList[2], statList[3], statList[4], statList[5], 0);
             }
         } else {
-          console.error('Request failed: ' + xhr.status);
+            console.error('Request failed: ' + xhr.status);
         }
-      };
+    };
     xhr.send();
 }
 
-function initConn(){
-    var xhr=new XMLHttpRequest();
-    xhr.open("GET", serverURL+"/init", true);
-    xhr.onload = function() {
-        if (xhr.status == 200) {
-          // 请求成功，处理返回的数据
-          console.log(xhr.responseText);
-          // 在这里解析数据并进行相应的操作
-          if(this.responseText!="-1")
-          {
-            esp32StatFreq=parseInt(this.responseText);
-            clearInterval(autoInitConn);
-            document.getElementById("statusText").textContent="Connected";
-            updateGraph(-1,-1,-1,-1,1);
-            getDisDataIntv=setInterval(getDispData,esp32StatFreq*1000);
-          }
-        } else {
-          // 请求失败，输出错误信息
-          console.error('Request failed: ' + xhr.status);
-        }
-      };
-    xhr.send();
-}
-
-autoInitConn=setInterval(initConn,1000);
-
-document.getElementById('poweronButton').addEventListener('click', function() {
+function initConn() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', serverURL+'/poweron', true);
-    xhr.onreadystatechange = function() {
+    xhr.open("GET", serverURL + "/init", true);
+    xhr.onload = function () {
+        if (xhr.status == 200) {
+            // 请求成功，处理返回的数据
+            console.log(xhr.responseText);
+            // 在这里解析数据并进行相应的操作
+            if (this.responseText != "-1") {
+                esp32StatFreq = parseInt(this.responseText);
+                clearInterval(autoInitConn);
+                document.getElementById("statusText").textContent = "Connected";
+                updateGraph(-1, -1, -1, -1, 1);
+                getDisDataIntv = setInterval(getDispData, esp32StatFreq * 1000);
+            }
+        } else {
+            // 请求失败，输出错误信息
+            console.error('Request failed: ' + xhr.status);
+        }
+    };
+    xhr.send();
+}
+
+autoInitConn = setInterval(initConn, 1000);
+
+document.getElementById('poweronButton').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', serverURL + '/poweron', true);
+    xhr.onreadystatechange = function () {
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 200) {
                 console.log('Request succeeded:', xhr.responseText);
@@ -285,10 +301,10 @@ document.getElementById('poweronButton').addEventListener('click', function() {
     xhr.send();
 });
 
-document.getElementById('poweroffButton').addEventListener('click', function() {
+document.getElementById('poweroffButton').addEventListener('click', function () {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', serverURL+'/poweroff', true);
-    xhr.onreadystatechange = function() {
+    xhr.open('GET', serverURL + '/poweroff', true);
+    xhr.onreadystatechange = function () {
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 200) {
                 console.log('Request succeeded:', xhr.responseText);
@@ -298,4 +314,30 @@ document.getElementById('poweroffButton').addEventListener('click', function() {
         }
     };
     xhr.send();
+});
+
+document.getElementById('bootTimeSet').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest();
+    var data="onTime,";
+    xhr.open('POST', serverURL, true);
+    xhr.setRequestHeader("Content-Type", "text/plain"); // 设置请求头，指定发送的数据类型为纯文本
+    xhr.onreadystatechange = function () { // 监听状态改变
+        if (xhr.readyState === 4 && xhr.status === 200) { // 如果请求完成且成功
+            console.log(xhr.responseText); // 输出服务器响应
+        }
+    };
+    xhr.send(data); // 发送数据
+});
+
+document.getElementById('offTimeSet').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest();
+    var data="offTime,";
+    xhr.open('POST', serverURL, true);
+    xhr.setRequestHeader("Content-Type", "text/plain"); // 设置请求头，指定发送的数据类型为纯文本
+    xhr.onreadystatechange = function () { // 监听状态改变
+        if (xhr.readyState === 4 && xhr.status === 200) { // 如果请求完成且成功
+            console.log(xhr.responseText); // 输出服务器响应
+        }
+    };
+    xhr.send(data); // 发送数据
 });
