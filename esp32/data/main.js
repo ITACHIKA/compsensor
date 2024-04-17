@@ -82,29 +82,18 @@ document.getElementById('toggleSetting').addEventListener('click', function (eve
     autoPwrSec.style.display='block';
     divl2.style.display='block';
 
-    timeSetStatusChange(true);
+    //timeSetStatusChange(true);
 
     //getInfoView.style.display='block';
 
 });
 
 function timeSetStatusChange(status){
-    var oTimeBut=document.getElementById('bootTimeSet');
-    var oTimeHr=document.getElementById('bootHr');
-    var oTimeSec=document.getElementById('bootMin');
-    var oTimeMin=document.getElementById('bootSec');
-    var fTimeBut=document.getElementById('offTimeSet');
-    var fTimeSec=document.getElementById('offHr');
-    var fTimeMin=document.getElementById('offMin');
-    var fTimeHr=document.getElementById('offSec');
-    oTimeBut.disabled=status;
-    fTimeBut.disabled=status;
-    oTimeHr.disabled=status;
-    oTimeSec.disabled=status;
-    oTimeMin.disabled=status;
-    fTimeHr.disabled=status;
-    fTimeSec.disabled=status;
-    fTimeMin.disabled=status;
+
+    var enterBox=document.getElementsByClassName("userEnter");
+    for(var i of enterBox){
+        i.disabled=status;
+    }
 }
 
 function setNetworkInfo(apssid,appwd,ssid,pwd)
@@ -375,7 +364,14 @@ document.getElementById('poweroffButton').addEventListener('click', function () 
 
 document.getElementById('bootTimeSet').addEventListener('click', function () {
     var xhr = new XMLHttpRequest();
-    var data="onTime,";
+    var header="onTime";
+    var bootHr=document.getElementById('bootHr').value;
+    var bootMin=document.getElementById('bootMin').value;
+    var bootSec=document.getElementById('bootSec').value;
+    if(!(parseFloat(bootHr)%1==0)||!(parseFloat(bootMin)%1==0)||!(parseFloat(bootSec)%1==0)||parseInt(bootHr)<0 || parseInt(bootHr)>25 || parseInt(bootMin)<0 || parseInt(bootMin)>61 || parseInt(bootSec)<0 || parseInt(bootSec)>61)
+    {
+        alert("Invalid Time!");
+    }
     xhr.open('POST', serverURL, true);
     xhr.setRequestHeader("Content-Type", "text/plain"); // 设置请求头，指定发送的数据类型为纯文本
     xhr.onreadystatechange = function () { // 监听状态改变
@@ -383,12 +379,19 @@ document.getElementById('bootTimeSet').addEventListener('click', function () {
             console.log(xhr.responseText); // 输出服务器响应
         }
     };
-    xhr.send(data); // 发送数据
+    xhr.send(header); // 发送数据
 });
 
 document.getElementById('offTimeSet').addEventListener('click', function () {
     var xhr = new XMLHttpRequest();
-    var data="offTime,";
+    var header="offTime,";
+    var offHr=document.getElementById('offHr').value;
+    var offMin=document.getElementById('offMin').value;
+    var offSec=document.getElementById('offSec').value;
+    if(!(parseFloat(offHr)%1==0)||!(parseFloat(offMin)%1==0)||!(parseFloat(offSec)%1==0)||parseInt(offHr)<0 || parseInt(offHr)>25 || parseInt(offMin)<0 || parseInt(offMin)>61 || parseInt(offSec)<0 || parseInt(offSec)>61)
+    {
+        alert("Invalid Time!");
+    }
     xhr.open('POST', serverURL, true);
     xhr.setRequestHeader("Content-Type", "text/plain"); // 设置请求头，指定发送的数据类型为纯文本
     xhr.onreadystatechange = function () { // 监听状态改变
@@ -396,5 +399,5 @@ document.getElementById('offTimeSet').addEventListener('click', function () {
             console.log(xhr.responseText); // 输出服务器响应
         }
     };
-    xhr.send(data); // 发送数据
+    xhr.send(header); // 发送数据
 });
