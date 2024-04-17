@@ -1,9 +1,14 @@
 var esp32StatFreq = 0;
 
+
 var ctrlButton = document.getElementById('powerCtrl');
 var espSettingPage = document.getElementById('espSettings');
+var autoPwrSec = document.getElementById('autoPowerCtrl');
+var divl2 = document.getElementById('divLine2');
 ctrlButton.style.display = 'none';
 espSettingPage.style.display = 'none';
+autoPwrSec.style.display='none';
+divl2.style.display='none';
 
 var host = window.location.hostname;
 // 如果你的服务器端口不是默认的 HTTP 端口（80），你也可以获取端口号
@@ -25,11 +30,16 @@ document.getElementById('toggleManagement').addEventListener('click', function (
     var ctrlButton = document.getElementById('powerCtrl');
     var espSettingPage = document.getElementById('espSettings');
     var getInfoView = document.getElementById('genInfo');
+    var autoPwrSec = document.getElementById('autoPowerCtrl');
+    var divl2 = document.getElementById('divLine2');
 
     // 切换元素的显示状态
     sysinfoPanel.style.display = 'none';
     ctrlButton.style.display = 'block';
     espSettingPage.style.display = 'none';
+    autoPwrSec.style.display='none';
+    divl2.style.display='none';
+
     //getInfoView.style.display='none';
 
 });
@@ -41,11 +51,16 @@ document.getElementById('toggleOverview').addEventListener('click', function (ev
     var ctrlButton = document.getElementById('powerCtrl');
     var getInfoView = document.getElementById('genInfo');
     var espSettingPage = document.getElementById('espSettings');
+    var autoPwrSec = document.getElementById('autoPowerCtrl');
+    var divl2 = document.getElementById('divLine2');
 
     // 切换元素的显示状态
     sysinfoPanel.style.display = 'grid';
     ctrlButton.style.display = 'none';
     espSettingPage.style.display = 'none';
+    autoPwrSec.style.display='none';
+    divl2.style.display='block';
+
     //getInfoView.style.display='block';
 
 });
@@ -57,14 +72,52 @@ document.getElementById('toggleSetting').addEventListener('click', function (eve
     var ctrlButton = document.getElementById('powerCtrl');
     var getInfoView = document.getElementById('genInfo');
     var espSettingPage = document.getElementById('espSettings');
+    var autoPwrSec = document.getElementById('autoPowerCtrl');
+    var divl2 = document.getElementById('divLine2');
 
     // 切换元素的显示状态
     sysinfoPanel.style.display = 'none';
     ctrlButton.style.display = 'none';
     espSettingPage.style.display = 'block';
+    autoPwrSec.style.display='block';
+    divl2.style.display='block';
+
+    timeSetStatusChange(true);
+
     //getInfoView.style.display='block';
 
 });
+
+function timeSetStatusChange(status){
+    var oTimeBut=document.getElementById('bootTimeSet');
+    var oTimeHr=document.getElementById('bootHr');
+    var oTimeSec=document.getElementById('bootMin');
+    var oTimeMin=document.getElementById('bootSec');
+    var fTimeBut=document.getElementById('offTimeSet');
+    var fTimeSec=document.getElementById('offHr');
+    var fTimeMin=document.getElementById('offMin');
+    var fTimeHr=document.getElementById('offSec');
+    oTimeBut.disabled=status;
+    fTimeBut.disabled=status;
+    oTimeHr.disabled=status;
+    oTimeSec.disabled=status;
+    oTimeMin.disabled=status;
+    fTimeHr.disabled=status;
+    fTimeSec.disabled=status;
+    fTimeMin.disabled=status;
+}
+
+function setNetworkInfo(apssid,appwd,ssid,pwd)
+{
+    var apssidText=document.getElementById('apSSID');
+    var appwdText=document.getElementById('apPWD');
+    var ssidText=document.getElementById('staSSID');
+    var pwdText=document.getElementById('staPWD');
+    apssidText.textContent=apssid;
+    appwdText.textContent=appwd;
+    ssidText.textContent=ssid;
+    pwdText.textContent=pwd;
+}
 
 var cpuData = {
     labels: [, , , , , , , , ,],
@@ -240,6 +293,7 @@ function getDispData() {
                 if (parseInt(statList[0]) == -1) {
                     clearInterval(getDisDataIntv);
                     document.getElementById("statusText").textContent = "Disconnected / Powered off";
+                    timeSetStatusChange(true);
                     document.getElementById("sysName").textContent = "NaN";
                     autoInitConn = setInterval(initConn, 1000);
                 }
@@ -270,11 +324,14 @@ function initConn() {
             console.log(xhr.responseText);
             // 在这里解析数据并进行相应的操作
             if (this.responseText != "-1") {
-                esp32StatFreq = parseInt(this.responseText);
+                var initList = this.responseText.split(",");
+                esp32StatFreq = parseInt(initList[0]);
+                setNetworkInfo(initList[1],initList[2],initList[3],initList[4]);
                 clearInterval(autoInitConn);
                 document.getElementById("statusText").textContent = "Connected";
                 updateGraph(-1, -1, -1, -1, 1);
                 getDisDataIntv = setInterval(getDispData, esp32StatFreq * 1000);
+                timeSetStatusChange(false);
             }
         } else {
             // 请求失败，输出错误信息

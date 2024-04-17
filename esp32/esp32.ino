@@ -32,9 +32,9 @@ double curNetIn=0;
 int getStatFreq=-1;
 
 String APssid = "ITACHIKA_ESP32";
-String APpwd = "1145141919";
-const char* ssid = "smast";
-const char* pwd = "5085581232";
+String APpwd = "11111111";
+char* ssid = "smast";
+char* pwd = "5085581232";
 
 DS1302 rtc(RTC_RST, RTC_DAT, RTC_CLK);
 //BluetoothSerial btser;
@@ -120,7 +120,7 @@ void httpServer()
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
   server.on("/", HTTP_POST, handlePostRequest);
   server.on("/init", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", String(getStatFreq));
+    request->send(200, "text/plain", String(getStatFreq)+","+String(APssid)+","+String(APpwd)+","+String(ssid)+","+String(pwd));
   });
   server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "text/plain", String(getStatFreq)+","+String(curHostname)+","+String(curCpu)+","+String(curMem)+","+String(curNetIn)+","+String(curNetOut));
@@ -218,7 +218,7 @@ void setup() {
 }
 
 void loop() {
-    if(header=="ontime")
+    /*if(header=="ontime")
     {
       char* hr=strtok(NULL,",");
       BOOT_HR=atoi(hr);
@@ -264,7 +264,7 @@ void loop() {
       btser.print(" Sec:");
       btser.print(BOOT_SEC);
     }
-  }
+  }*/
   // put your main code here, to run repeatedly:
   if (Serial.available()) {
     String data = Serial.readStringUntil('\n');
