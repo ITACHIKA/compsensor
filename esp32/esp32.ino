@@ -198,7 +198,12 @@ void setup() {
   //btser.begin("ESP32");
   pinMode(12, OUTPUT);
 
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+  {
+     Serial.println("I2C display failure.");
+     for(;;);
+  }
+  Serial.println("I2C display initialized");
 
   display.clearDisplay();
   display.setTextSize(1);
@@ -228,7 +233,11 @@ void setup() {
   Wire.beginTransmission(EEPROM_I2C_ADDR);  // 开始I2C传输
   Wire.write((int)(addr >> 8));             // 高位地址
   Wire.write((int)(addr & 0xFF));           // 低位地址
-  Wire.endTransmission();                   // 结束传输
+  if(Wire.endTransmission()!=0)             // 结束传输
+  {
+    Serial.println("EEPROM not installed or failed!");
+    for(;;);
+  }
 
   int length = 6;
   int timeStr[length];
@@ -247,7 +256,9 @@ void setup() {
 
   Serial.println("BOOT config:");
   Serial.print(BOOT_HR);
+  Serial.print(":");
   Serial.print(BOOT_MIN);
+  Serial.print(":");
   Serial.println(BOOT_SEC);
 
   //recover poweroff time from eeprom
@@ -272,7 +283,9 @@ void setup() {
 
   Serial.println("OFF config:");
   Serial.print(OFF_HR);
+  Serial.print(":");
   Serial.print(OFF_MIN);
+  Serial.print(":");
   Serial.println(OFF_SEC);
   
   rtc.writeProtect(false);
@@ -286,7 +299,13 @@ void setup() {
     initStaWifi();
   }
 
-  SPIFFS.begin();
+  Serial.println("WIFI ready.");
+
+  if(!SPIFFS.begin())
+  {
+    Serial.println("SPIFFS error.");
+    for(;;);
+  }
 
   httpServer();
   

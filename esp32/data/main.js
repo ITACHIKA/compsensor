@@ -373,19 +373,22 @@ document.getElementById('bootTimeSet').addEventListener('click', function () {
     {
         alert("Invalid Time!");
     }
-    xhr.open('POST', serverURL, true);
-    xhr.setRequestHeader("Content-Type", "text/plain"); // 设置请求头，指定发送的数据类型为纯文本
-    xhr.onreadystatechange = function () { // 监听状态改变
-        if (xhr.readyState === 4 && xhr.status === 200) { // 如果请求完成且成功
-            console.log(xhr.responseText); // 输出服务器响应
-        }
-    };
-    xhr.send("data="+data); // 发送数据
+    else
+    {
+    	xhr.open('POST', serverURL, true);
+    	xhr.setRequestHeader("Content-Type", "text/plain"); // 设置请求头，指定发送的数据类型为纯文本
+    	xhr.onreadystatechange = function () { // 监听状态改变
+    	    if (xhr.readyState === 4 && xhr.status === 200) { // 如果请求完成且成功
+    	        console.log(xhr.responseText); // 输出服务器响应
+    	    }
+    	};
+    	xhr.send("data="+data); // 发送数据
+    }
 });
 
 document.getElementById('offTimeSet').addEventListener('click', function () {
     var xhr = new XMLHttpRequest();
-    var header="offTime,";
+    var header="offTime";
     var offHr=document.getElementById('offHr').value;
     var offMin=document.getElementById('offMin').value;
     var offSec=document.getElementById('offSec').value;
@@ -394,12 +397,15 @@ document.getElementById('offTimeSet').addEventListener('click', function () {
     {
         alert("Invalid Time!");
     }
-    xhr.open('POST', serverURL, true);
-    xhr.setRequestHeader("Content-Type", "text/plain"); // 设置请求头，指定发送的数据类型为纯文本
-    xhr.onreadystatechange = function () { // 监听状态改变
-        if (xhr.readyState === 4 && xhr.status === 200) { // 如果请求完成且成功
-            console.log(xhr.responseText); // 输出服务器响应
-        }
-    };
-    xhr.send("data="+data); // 发送数据
+    else
+    {
+    	xhr.open('POST', serverURL, true);
+    	xhr.setRequestHeader("Content-Type", "text/plain"); // 设置请求头，指定发送的数据类型为纯文本
+    	xhr.onreadystatechange = function () { // 监听状态改变
+    	    if (xhr.readyState === 4 && xhr.status === 200) { // 如果请求完成且成功
+    	        console.log(xhr.responseText); // 输出服务器响应
+    	    }
+    	};
+    	xhr.send("data="+data); // 发送数据
+    }
 });
