@@ -368,6 +368,7 @@ document.getElementById('bootTimeSet').addEventListener('click', function () {
     var bootHr=document.getElementById('bootHr').value;
     var bootMin=document.getElementById('bootMin').value;
     var bootSec=document.getElementById('bootSec').value;
+    var data=header+","+bootHr+","+bootMin+","+bootSec;
     if(!(parseFloat(bootHr)%1==0)||!(parseFloat(bootMin)%1==0)||!(parseFloat(bootSec)%1==0)||parseInt(bootHr)<0 || parseInt(bootHr)>25 || parseInt(bootMin)<0 || parseInt(bootMin)>61 || parseInt(bootSec)<0 || parseInt(bootSec)>61)
     {
         alert("Invalid Time!");
@@ -379,7 +380,7 @@ document.getElementById('bootTimeSet').addEventListener('click', function () {
             console.log(xhr.responseText); // 输出服务器响应
         }
     };
-    xhr.send(header); // 发送数据
+    xhr.send("data="+data); // 发送数据
 });
 
 document.getElementById('offTimeSet').addEventListener('click', function () {
@@ -388,6 +389,7 @@ document.getElementById('offTimeSet').addEventListener('click', function () {
     var offHr=document.getElementById('offHr').value;
     var offMin=document.getElementById('offMin').value;
     var offSec=document.getElementById('offSec').value;
+    var data=header+","+offHr+","+offMin+","+offSec;
     if(!(parseFloat(offHr)%1==0)||!(parseFloat(offMin)%1==0)||!(parseFloat(offSec)%1==0)||parseInt(offHr)<0 || parseInt(offHr)>25 || parseInt(offMin)<0 || parseInt(offMin)>61 || parseInt(offSec)<0 || parseInt(offSec)>61)
     {
         alert("Invalid Time!");
@@ -399,5 +401,5 @@ document.getElementById('offTimeSet').addEventListener('click', function () {
             console.log(xhr.responseText); // 输出服务器响应
         }
     };
-    xhr.send(header); // 发送数据
+    xhr.send("data="+data); // 发送数据
 });

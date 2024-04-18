@@ -89,7 +89,8 @@ void handlePostRequest(AsyncWebServerRequest *request) {
       String data = param->value();
 
       // 在这里对接收到的数据进行处理
-      Serial.println("Received data: " + data);
+      Serial.print("Received data: ");
+      Serial.println(data.c_str());
       char dataArray[data.length() + 1];  // +1 是为了存储字符串结尾的空字符
       data.toCharArray(dataArray, sizeof(dataArray));
       String header = strtok(dataArray, ",");
@@ -102,6 +103,12 @@ void handlePostRequest(AsyncWebServerRequest *request) {
         char* sec=strtok(NULL,",");
         BOOT_SEC=atoi(sec);
         char* timedat=strcat(hr,strcat(min,sec));
+
+        Serial.println("Receive BOOT config:");
+        Serial.print(BOOT_HR);
+        Serial.print(BOOT_MIN);
+        Serial.println(BOOT_SEC);
+        
         int addr = 0;  // EEPROM 的起始地址
         Wire.beginTransmission(EEPROM_I2C_ADDR);
         Wire.write((int)(addr >> 8));   // 高位地址
@@ -121,6 +128,12 @@ void handlePostRequest(AsyncWebServerRequest *request) {
         char* sec=strtok(NULL,",");
         OFF_SEC=atoi(sec);
         char* timedat=strcat(hr,strcat(min,sec));
+
+        Serial.println("Receive OFF config:");
+        Serial.print(OFF_HR);
+        Serial.print(OFF_MIN);
+        Serial.println(OFF_SEC);
+        
         int addr = 10;  // EEPROM 的起始地址
         Wire.beginTransmission(EEPROM_I2C_ADDR);
         Wire.write((int)(addr >> 8));   // 高位地址
@@ -232,6 +245,7 @@ void setup() {
     BOOT_SEC = (timeStr[4] - 48) * 10 + (timeStr[5] - 48);
   }
 
+  Serial.println("BOOT config:");
   Serial.print(BOOT_HR);
   Serial.print(BOOT_MIN);
   Serial.println(BOOT_SEC);
@@ -256,6 +270,7 @@ void setup() {
     OFF_SEC = (timeStr[4] - 48) * 10 + (timeStr[5] - 48);
   }
 
+  Serial.println("OFF config:");
   Serial.print(OFF_HR);
   Serial.print(OFF_MIN);
   Serial.println(OFF_SEC);
