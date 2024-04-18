@@ -2,7 +2,6 @@
 #include <Adafruit_SSD1306.h>
 #include "DS1302.h"
 #include <Wire.h>
-//#include "BluetoothSerial.h"
 #include <SPIFFS.h>
 #include "ESPAsyncWebServer.h"
 #include <WiFi.h>
@@ -20,9 +19,13 @@
 #define EEPROM_ADDR_READ 0xA1
 #define EEPROM_I2C_ADDR 0x50
 
-int BOOT_HR = -1;
-int BOOT_MIN = -1;
-int BOOT_SEC = -1;
+int BOOT_HR = 25;
+int BOOT_MIN = 61;
+int BOOT_SEC = 61;
+
+int OFF_HR=25;
+int OFF_MIN=61;
+int OFF_SEC=61;
 
 String curHostname="NaN";
 double curCpu=0;
@@ -36,18 +39,20 @@ String APpwd = "11111111";
 char* ssid = "smast";
 char* pwd = "5085581232";
 
+int wifiType=1;
+
 DS1302 rtc(RTC_RST, RTC_DAT, RTC_CLK);
-//BluetoothSerial btser;
+
 AsyncWebServer server(80);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 void powerOffTask(void * parameter) {
   // 将针脚设置为输出模式
+  Serial.println("PowerOff Task entry");
   digitalWrite(12, HIGH);
-  vTaskDelay(pdMS_TO_TICKS(5000));
+  vTaskDelay(pdMS_TO_TICKS(4000));
   digitalWrite(12, LOW);
-  Serial.println("asdasdd");
-
+  vTaskDelete(NULL);
 }
 
 void initApWifi() {
@@ -90,19 +95,45 @@ void handlePostRequest(AsyncWebServerRequest *request) {
       String header = strtok(dataArray, ",");
       if(header=="onTime")
       {
-
+        char* hr=strtok(NULL,",");
+        BOOT_HR=atoi(hr);
+        char* min=strtok(NULL,",");
+        BOOT_MIN=atoi(min);
+        char* sec=strtok(NULL,",");
+        BOOT_SEC=atoi(sec);
+        char* timedat=strcat(hr,strcat(min,sec));
+        int addr = 0;  // EEPROM 的起始地址
+        Wire.beginTransmission(EEPROM_I2C_ADDR);
+        Wire.write((int)(addr >> 8));   // 高位地址
+        Wire.write((int)(addr & 0xFF)); // 低位地址
+        for (int i = 0; i < 6; i++) 
+        {  // 6 是 timedat 的长度
+          Wire.write(timedat[i]);  // 逐个字节写入拼接后的字符串
+        }
+        Wire.endTransmission();
       }
       if(header=="offTime")
       {
-
+        char* hr=strtok(NULL,",");
+        OFF_HR=atoi(hr);
+        char* min=strtok(NULL,",");
+        OFF_MIN=atoi(min);
+        char* sec=strtok(NULL,",");
+        OFF_SEC=atoi(sec);
+        char* timedat=strcat(hr,strcat(min,sec));
+        int addr = 10;  // EEPROM 的起始地址
+        Wire.beginTransmission(EEPROM_I2C_ADDR);
+        Wire.write((int)(addr >> 8));   // 高位地址
+        Wire.write((int)(addr & 0xFF)); // 低位地址
+        for (int i = 0; i < 6; i++) 
+        {  // 6 是 timedat 的长度
+          Wire.write(timedat[i]);  // 逐个字节写入拼接后的字符串
+        }
+        Wire.endTransmission();
       }
-      if(header=="apSet")
+      if(header=="netSet")
       {
-
-      }
-      if(header=="staSet")
-      {
-        
+        //char* 
       }
 
       // 发送响应
@@ -128,14 +159,13 @@ void httpServer()
   server.on("/poweroff", HTTP_GET, [](AsyncWebServerRequest *request){
   xTaskCreatePinnedToCore(
     powerOffTask,   // 任务函数
-    "PowerOffTask", // 任务名称
+    "PowerOff", // 任务名称
     1000,          // 堆栈大小（字节）
     NULL,           // 任务参数
-    1,              // 任务优先级
+    0,              // 任务优先级
     NULL,           // 任务句柄
     0               // 核心编号（0 或 1）
   );
-  Serial.println("asdasdd22222");
   request->send(200, "text/plain", "Device powered off"); // 发送响应
   });
   server.on("/poweron", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -179,7 +209,7 @@ void setup() {
     display.display();
   }
 
-  //recover lost time data
+  //recover boot time from eeprom
 
   int addr = 0;
   Wire.beginTransmission(EEPROM_I2C_ADDR);  // 开始I2C传输
@@ -205,11 +235,41 @@ void setup() {
   Serial.print(BOOT_HR);
   Serial.print(BOOT_MIN);
   Serial.println(BOOT_SEC);
+
+  //recover poweroff time from eeprom
+  addr = 10;
+  Wire.beginTransmission(EEPROM_I2C_ADDR);  // 开始I2C传输
+  Wire.write((int)(addr >> 8));             // 高位地址
+  Wire.write((int)(addr & 0xFF));           // 低位地址
+  Wire.endTransmission();                   // 结束传输
+  
+  Wire.requestFrom(EEPROM_I2C_ADDR, length);  // 从EEPROM请求数据
+  i = 0;
+  while (Wire.available() && i < length) {  // 读取数据并保存到数组中
+    timeStr[i] = Wire.read();
+    i++;
+  }
+
+  if (timeStr[i] != 255) {
+    OFF_HR = (timeStr[0] - 48) * 10 + (timeStr[1] - 48);
+    OFF_MIN = (timeStr[2] - 48) * 10 + (timeStr[3] - 48);
+    OFF_SEC = (timeStr[4] - 48) * 10 + (timeStr[5] - 48);
+  }
+
+  Serial.print(OFF_HR);
+  Serial.print(OFF_MIN);
+  Serial.println(OFF_SEC);
   
   rtc.writeProtect(false);
 
-  initApWifi();
-  //initStaWifi();
+  if(wifiType)
+  {
+    initApWifi();
+  }
+  else
+  { 
+    initStaWifi();
+  }
 
   SPIFFS.begin();
 
@@ -218,53 +278,6 @@ void setup() {
 }
 
 void loop() {
-    /*if(header=="ontime")
-    {
-      char* hr=strtok(NULL,",");
-      BOOT_HR=atoi(hr);
-      char* min=strtok(NULL,",");
-      BOOT_MIN=atoi(min);
-      char* sec=strtok(NULL,",");
-      BOOT_SEC=atoi(sec);
-      char* timedat=strcat(hr,strcat(min,sec));
-      Serial.println(timedat);
-      
-      // 将拼接后的字符串写入 EEPROM
-      int addr = 0;  // EEPROM 的起始地址
-      Wire.beginTransmission(EEPROM_I2C_ADDR);
-      Wire.write((int)(addr >> 8));   // 高位地址
-      Wire.write((int)(addr & 0xFF)); // 低位地址
-      for (int i = 0; i < 6; i++) 
-      {  // 6 是 timedat 的长度
-        Wire.write(timedat[i]);  // 逐个字节写入拼接后的字符串
-      }
-      Wire.endTransmission();
-    }
-    if(header=="resettime")
-    {
-      BOOT_HR=-1;
-      BOOT_MIN=-1;
-      BOOT_SEC=-1;
-      int addr = 0;  // EEPROM 的起始地址
-      Wire.beginTransmission(EEPROM_I2C_ADDR);
-      Wire.write((int)(addr >> 8));   // 高位地址
-      Wire.write((int)(addr & 0xFF)); // 低位地址
-      for (int i = 0; i < 6; i++) 
-      {  // 6 是 timedat 的长度
-        Wire.write(-1);  //清空
-      }
-      Wire.endTransmission();
-    }
-    if(header=="getcurset")
-    {
-      btser.print("Hour:");
-      btser.print(BOOT_HR);
-      btser.print(" Min:");
-      btser.print(BOOT_MIN);
-      btser.print(" Sec:");
-      btser.print(BOOT_SEC);
-    }
-  }*/
   // put your main code here, to run repeatedly:
   if (Serial.available()) {
     String data = Serial.readStringUntil('\n');
@@ -273,7 +286,6 @@ void loop() {
     String header = strtok(dataArray, ",");
     //Serial.println(data);
     //Serial.println(header);
-    //btser.println(data);
     if (header == "init") {
       char* hr = strtok(NULL, ",");
       char* minu = strtok(NULL, ",");
