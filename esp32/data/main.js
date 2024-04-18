@@ -312,8 +312,8 @@ function initConn() {
             // 请求成功，处理返回的数据
             console.log(xhr.responseText);
             // 在这里解析数据并进行相应的操作
-            if (this.responseText != "-1") {
-                var initList = this.responseText.split(",");
+            var initList = this.responseText.split(",");
+            if (initList[0] != "-1") {
                 esp32StatFreq = parseInt(initList[0]);
                 setNetworkInfo(initList[1],initList[2],initList[3],initList[4]);
                 clearInterval(autoInitConn);
