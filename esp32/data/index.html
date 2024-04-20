@@ -35,9 +35,9 @@
                     <span id="statusText"> Disconnected / Powered off</span>
                 </div>
                 <div id="divLine1" class="divLine"></div>
-                <div id="powerCtrl" class="powerControl">
-                    <button id="poweronButton">Power On</button>
-                    <button id="poweroffButton">Power Off</button>
+                <div id="powerCtrl" class="powerControl col-md-6 col-sm-8">
+                    <button class="button" id="poweronButton">Power On</button>
+                    <button class="button" id="poweroffButton">Power Off</button>
                 </div>
                 <div id="espSettings" class="espSettings">
                     <span>Current Network Mode:</span>
@@ -52,35 +52,37 @@
                     <br>
                     <div id="apMode" class="apMode">
                         <span>AP SSID Name:</span>
-                        <span id="apSSID">NaN</span>
+                        <span id="apSSID" contenteditable="true">NaN</span>
                         <br>
                         <span>AP password Name:</span>
-                        <span id="apPWD">NaN</span>
+                        <span id="apPWD" contenteditable="true">NaN</span>
                     </div>
                     <div id="staMode" class="staMode">
                         <span>Router SSID Name:</span>
-                        <span id="staSSID">NaN</span>
+                        <span id="staSSID" contenteditable="true">NaN</span>
                         <br>
                         <span>Router password Name:</span>
-                        <span id="staPWD">NaN</span>
+                        <span id="staPWD" contenteditable="true">NaN</span>
                     </div>
+                    <span class="warnMsg" id="netChgNotSav">*You have made changes to network settings, and they are not saved.</span>
                 </div>
                 <div id="divLine2" class="divLine"></div>
+                <br>
                 <div id="autoPowerCtrl">
                     <div id="remoteBoot">
                         <span>Auto boot time:</span>
-                        <input class="userEnter" id="bootHr" type="number" min="-1" max="24" step="1">
-                        <input class="userEnter" id="bootMin" type="number" min="-1" max="60" step="1">
-                        <input class="userEnter" id="bootSec" type="number" min="-1" max="60" step="1">
-                        <button  class="userEnter" id="bootTimeSet">Set</button>
+                        <input class="userEnter textbar" id="bootHr" type="number" min="-1" max="24" step="1">
+                        <input class="userEnter textbar" id="bootMin" type="number" min="-1" max="60" step="1">
+                        <input class="userEnter textbar" id="bootSec" type="number" min="-1" max="60" step="1">
+                        <button  class="userEnter button" id="bootTimeSet">Set</button>
                     </div>
                     <br>
                     <div id="remoteOff">
                         <span>Auto off time:</span>
-                        <input class="userEnter" id="offHr" type="number" min="-1" max="24" step="1">
-                        <input class="userEnter" id="offMin" type="number" min="-1" max="60" step="1">
-                        <input class="userEnter" id="offSec" type="number" min="-1" max="60" step="1">
-                        <button class="userEnter" id="offTimeSet">Set</button>
+                        <input class="userEnter textbar" id="offHr" type="number" min="-1" max="24" step="1">
+                        <input class="userEnter textbar" id="offMin" type="number" min="-1" max="60" step="1">
+                        <input class="userEnter textbar" id="offSec" type="number" min="-1" max="60" step="1">
+                        <button class="userEnter button" id="offTimeSet">Set</button>
                     </div>
                 </div>
                 <div class="container" id="contain1">

@@ -1,6 +1,5 @@
 var esp32StatFreq = 0;
 
-
 var ctrlButton = document.getElementById('powerCtrl');
 var espSettingPage = document.getElementById('espSettings');
 var autoPwrSec = document.getElementById('autoPowerCtrl');
@@ -59,7 +58,7 @@ document.getElementById('toggleOverview').addEventListener('click', function (ev
     ctrlButton.style.display = 'none';
     espSettingPage.style.display = 'none';
     autoPwrSec.style.display='none';
-    divl2.style.display='block';
+    divl2.style.display='none';
 
     //getInfoView.style.display='block';
 
@@ -330,7 +329,10 @@ function initConn() {
     xhr.send();
 }
 
-autoInitConn = setInterval(initConn, 1000);
+if(serverURL!='file://')
+{
+    autoInitConn = setInterval(initConn, 1000);
+}
 
 document.getElementById('poweronButton').addEventListener('click', function () {
     var xhr = new XMLHttpRequest();
