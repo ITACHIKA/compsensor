@@ -105,17 +105,15 @@ def applyButtonOnclick():
         try: 
             ser=serial.Serial(port=portSelector.get(),baudrate=115200,timeout=2)
             print(portSelector.get())
+            initArduino()
+            sleep(0.5) #won't work without this waiting
+
+            if(ostype=="Windows"):
+                getStatFreq-=0.15
+            #call stat collector
+            infoCollectDeliv()
         except Exception as e:
             messagebox.showerror("error",e)
-
-        sleep(2)
-        initArduino()
-        sleep(0.5) #won't work without this waiting
-
-        if(ostype=="Windows"):
-            getStatFreq-=0.15
-        #call stat collector
-        infoCollectDeliv()
 
 def writeCfg():
     port=portSelector.get()
@@ -133,9 +131,9 @@ for port in fullAvailPorts:
 window=tkinter.Tk()
 window.title("Arduino Sensor")
 if(ostype=="Windows"):
-    window.geometry('190x140')
+    window.geometry('190x160')
 else:
-    window.geometry('210x140')
+    window.geometry('210x160')
 window.resizable(False,False)
 
 def onWindowClose():

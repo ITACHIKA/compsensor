@@ -89,6 +89,7 @@ a{
     text-decoration: none !important 
 }
 .button {
+    line-height: normal;
     margin-right: 20px;
     display: inline-block; /* 设置按钮为行内块元素，使其可以水平排列 */
     padding: 5px 10px; /* 设置按钮内边距，调整按钮大小 */

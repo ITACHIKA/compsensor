@@ -55,6 +55,15 @@ void powerOffTask(void * parameter) {
   vTaskDelete(NULL);
 }
 
+void powerOnTask(void * parameter) {
+  // 将针脚设置为输出模式
+  Serial.println("PowerOff Task entry");
+  digitalWrite(12, HIGH);
+  vTaskDelay(pdMS_TO_TICKS(500));
+  digitalWrite(12, LOW);
+  vTaskDelete(NULL);
+}
+
 void initApWifi() {
   WiFi.mode(WIFI_AP);
   WiFi.softAP(APssid, APpwd);
@@ -182,9 +191,15 @@ void httpServer()
   request->send(200, "text/plain", "Device powered off"); // 发送响应
   });
   server.on("/poweron", HTTP_GET, [](AsyncWebServerRequest *request){
-  digitalWrite(12, HIGH);
-  delay(500);
-  digitalWrite(12,LOW);
+  xTaskCreatePinnedToCore(
+    powerOnTask,   // 任务函数
+    "PowerOn", // 任务名称
+    1000,          // 堆栈大小（字节）
+    NULL,           // 任务参数
+    0,              // 任务优先级
+    NULL,           // 任务句柄
+    0               // 核心编号（0 或 1）
+  );
   request->send(200, "text/plain", "Device powered on"); // 发送响应
 });
 

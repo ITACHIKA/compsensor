@@ -411,3 +411,9 @@ document.getElementById('offTimeSet').addEventListener('click', function () {
     	xhr.send("data="+data); // 发送数据
     }
 });
+
+apSsidDiv=document.getElementById("apSSID");
+apPwdDiv=document.getElementById("apPWD");
+staSsidDiv=document.getElementById("staSSID");
+staPwdDiv=document.getElementById("staPWD");
+
