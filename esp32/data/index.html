@@ -41,7 +41,7 @@
                 </div>
                 <div id="espSettings" class="espSettings">
                     <span>Current Network Mode:</span>
-                    <span id="espNetType"> NaN</span>
+                    <!-- <span id="espNetType"> NaN</span> -->
                     <label for="apMode">
                         <input type="radio" class="userEnter" id="netTypeAP" name="option" value="AP Mode"> AP Mode
                       </label>
@@ -52,23 +52,23 @@
                     <br>
                     <div id="apMode" class="apMode">
                         <span>AP SSID Name:</span>
-                        <span id="apSSID" contenteditable="true">NaN</span>
+                        <span id="apSSID" class="editablediv" contenteditable="true">NaN</span>
                         <br>
                         <span>AP password Name:</span>
-                        <span id="apPWD" contenteditable="true">NaN</span>
+                        <span id="apPWD" class="editablediv" contenteditable="true">NaN</span>
                     </div>
                     <div id="staMode" class="staMode">
                         <span>Router SSID Name:</span>
-                        <span id="staSSID" contenteditable="true">NaN</span>
+                        <span id="staSSID" class="editablediv" contenteditable="true">NaN</span>
                         <br>
                         <span>Router password Name:</span>
-                        <span id="staPWD" contenteditable="true">NaN</span>
+                        <span id="staPWD" class="editablediv" contenteditable="true">NaN</span>
                     </div>
                     <span class="warnMsg" id="netChgNotSav">*You have made changes to network settings, and they are not saved.</span>
                     <br>
                     <div>
-                        <button class="button">Save</button>
-                        <button class="button" id="restoreNetSet">Restore</button>
+                        <button class="userEnter button" id="netSet">Save</button>
+                        <button class="userEnter button" id="restoreNetSet">Restore</button>
                     </div>
                 </div>
                 <div id="divLine2" class="divLine"></div>
@@ -79,7 +79,7 @@
                         <input class="userEnter textbar" id="bootHr" type="number" min="-1" max="24" step="1">
                         <input class="userEnter textbar" id="bootMin" type="number" min="-1" max="60" step="1">
                         <input class="userEnter textbar" id="bootSec" type="number" min="-1" max="60" step="1">
-                        <button  class="userEnter button" id="bootTimeSet">Set</button>
+                        <button class="userEnter button" id="bootTimeSet">Set</button>
                     </div>
                     <br>
                     <div id="remoteOff">

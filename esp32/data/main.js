@@ -18,7 +18,23 @@ if (port) {
     serverURL += ":" + port;
 }
 
+document.getElementById("netChgNotSav").style.display="none";
+
 console.log(serverURL);
+
+function setUsereditStatus(status){
+    editableContents=document.getElementsByClassName("userEnter");
+    editableNetContents=document.getElementsByClassName("editablediv");
+    for (let i = 0; i < editableContents.length; i++) {
+        editableContents[i].disabled=status;
+    }
+    for(var content of editableNetContents)
+    {
+        content.contentEditable=!status;
+    }
+}
+
+setUsereditStatus(1);
 
 // 假设这是您的 CPU 和内存使用率数据
 document.getElementById('toggleManagement').addEventListener('click', function (event) {
@@ -87,16 +103,18 @@ document.getElementById('toggleSetting').addEventListener('click', function (eve
 
 });
 
-function timeSetStatusChange(status){
-
-    var enterBox=document.getElementsByClassName("userEnter");
-    for(var i of enterBox){
-        i.disabled=status;
-    }
-}
-
-function setNetworkInfo(apssid,appwd,ssid,pwd)
+function setNetworkInfo(radioType,apssid,appwd,ssid,pwd)
 {
+    if(radioType=="1")
+    {
+        var apSelectRadio=document.getElementById("netTypeAP");
+        apSelectRadio.checked=true;
+    }
+    if(radioType=="0")
+    {
+        var staSelectRadio=document.getElementById("netTypeSta");
+        staSelectRadio.checked=true;
+    }
     var apssidText=document.getElementById('apSSID');
     var appwdText=document.getElementById('apPWD');
     var ssidText=document.getElementById('staSSID');
@@ -281,7 +299,7 @@ function getDispData() {
                 if (parseInt(statList[0]) == -1) {
                     clearInterval(getDisDataIntv);
                     document.getElementById("statusText").textContent = "Disconnected / Powered off";
-                    timeSetStatusChange(true);
+                    setUsereditStatus(true);//disable edit
                     document.getElementById("sysName").textContent = "NaN";
                     autoInitConn = setInterval(initConn, 1000);
                 }
@@ -314,12 +332,13 @@ function initConn() {
             var initList = this.responseText.split(",");
             if (initList[0] != "-1") {
                 esp32StatFreq = parseInt(initList[0]);
-                setNetworkInfo(initList[1],initList[2],initList[3],initList[4]);
+                console.log(initList[1]);
+                setNetworkInfo(initList[1],initList[2],initList[3],initList[4],initList[5]);
                 clearInterval(autoInitConn);
                 document.getElementById("statusText").textContent = "Connected";
                 updateGraph(-1, -1, -1, -1, 1);
                 getDisDataIntv = setInterval(getDispData, esp32StatFreq * 1000);
-                timeSetStatusChange(false);
+                setUsereditStatus(false); //enable edit
             }
         } else {
             // 请求失败，输出错误信息
@@ -412,8 +431,52 @@ document.getElementById('offTimeSet').addEventListener('click', function () {
     }
 });
 
-apSsidDiv=document.getElementById("apSSID");
-apPwdDiv=document.getElementById("apPWD");
-staSsidDiv=document.getElementById("staSSID");
-staPwdDiv=document.getElementById("staPWD");
+//setUsereditStatus(0);
 
+document.getElementById('netSet').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest();
+    var header="netSet";
+    var radioType;
+    var apSelectRadio=document.getElementById("netTypeAP");
+    var staSelectRadio=document.getElementById("netTypeSta");
+    if(apSelectRadio.checked)
+    {
+        radioType="1";
+    }
+    if(staSelectRadio.checked)
+    {
+        radioType="0";
+    }
+    var apSSID=document.getElementById('apSSID').textContent;
+    var apPwd=document.getElementById('apPWD').textContent;
+    var staSSID=document.getElementById('staSSID').textContent;
+    var staPwd=document.getElementById('staPWD').textContent;
+    var data=header+","+radioType+","+apSSID+","+apPwd+","+staSSID+","+staPwd;
+    //console.log(data)
+    xhr.open('POST', serverURL, true);
+    xhr.setRequestHeader("Content-Type", "text/plain"); // 设置请求头，指定发送的数据类型为纯文本
+    xhr.onreadystatechange = function () { // 监听状态改变
+        if (xhr.readyState === 4 && xhr.status === 200) { // 如果请求完成且成功
+            console.log(xhr.responseText); // 输出服务器响应
+        }
+    };
+    xhr.send("data="+data); // 发送数据
+    //initConn();
+});
+
+wirelessInfo=document.querySelectorAll('.editablediv');
+wirelessInfo.forEach(function(div) {
+    let originalContent = div.textContent;
+    div.addEventListener('input', function() {
+        let currentContent = div.textContent;
+        if (currentContent !== originalContent) {
+            notSaveMsg=document.getElementById("netChgNotSav");
+            notSaveMsg.style.display="block";
+        }
+    });
+    div.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // 阻止默认的换行行为
+        }
+    });
+});
