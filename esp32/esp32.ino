@@ -6,7 +6,7 @@
 #include "ESPAsyncWebServer.h"
 #include <WiFi.h>
 #include <Arduino.h>
-#include <esp_timer.h>
+#include "ESP32TimerInterrupt.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -18,6 +18,9 @@
 #define EEPROM_ADDR_WRITE 0xA0
 #define EEPROM_ADDR_READ 0xA1
 #define EEPROM_I2C_ADDR 0x50
+
+ESP32Timer ITimer(1);
+ESP32_ISR_Timer ISR_TIMER;
 
 int BOOT_HR = 25;
 int BOOT_MIN = 61;
@@ -38,8 +41,7 @@ String APssid = "ITACHIKA_ESP32";
 String APpwd = "11111111";
 char *ssid = "smast";
 char *pwd = "5085581232";
-
-int wifiType;
+int wifiType=1;
 
 DS1302 rtc(RTC_RST, RTC_DAT, RTC_CLK);
 
@@ -94,7 +96,7 @@ void powerOffTask(void *parameter)
 void powerOnTask(void *parameter)
 {
   // 将针脚设置为输出模式
-  Serial.println("PowerOff Task entry");
+  Serial.println("PowerOn Task entry");
   digitalWrite(12, HIGH);
   vTaskDelay(pdMS_TO_TICKS(500));
   digitalWrite(12, LOW);
@@ -242,7 +244,7 @@ void handlePostRequest(AsyncWebServerRequest *request)
         }
         Wire.endTransmission();
       }
-      if (header == "offTime")
+      else if (header == "offTime")
       {
         char *hr = strtok(NULL, ",");
         OFF_HR = atoi(hr);
@@ -267,7 +269,7 @@ void handlePostRequest(AsyncWebServerRequest *request)
         }
         Wire.endTransmission();
       }
-      if (header == "netSet")
+      else if (header == "netSet")
       {
         /*char *radioType = strtok(NULL, ",");
         char *apSSID = strtok(NULL, ",");
@@ -276,6 +278,8 @@ void handlePostRequest(AsyncWebServerRequest *request)
         char *staPWD = strtok(NULL, ",");
 
         paramEEPROM params = { radioType,apSSID, apPWD, staSSID, staPWD };
+
+        vTaskDelay(pdMS_To_MS(10))
 
         xTaskCreatePinnedToCore(
           writeNetToEEPROM,  // 任务函数
@@ -289,7 +293,7 @@ void handlePostRequest(AsyncWebServerRequest *request)
       }*/
 
         // 发送响应
-        request->send(200, "text/plain", "Setting received");
+        //request->send(200, "text/plain", "Setting received");
       }
       else
       {
@@ -473,14 +477,13 @@ void setup()
   ssid=readFromEEPROM(70);
   pwd=readFromEEPROM(95);*/
 
-  Serial.println(readFromEEPROM(20));
+  /*Serial.println(readFromEEPROM(20));
   Serial.println(readFromEEPROM(45));
   Serial.println(readFromEEPROM(70));
-  Serial.println(readFromEEPROM(95));
+  Serial.println(readFromEEPROM(95));*/
+
 
   rtc.writeProtect(false);
-
-  wifiType = 1;
 
   if (wifiType)
   {
