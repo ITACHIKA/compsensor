@@ -131,9 +131,9 @@ for port in fullAvailPorts:
 window=tkinter.Tk()
 window.title("Arduino Sensor")
 if(ostype=="Windows"):
-    window.geometry('190x160')
+    window.geometry('200x140')
 else:
-    window.geometry('210x160')
+    window.geometry('220x140')
 window.resizable(False,False)
 
 def onWindowClose():
@@ -185,7 +185,7 @@ except FileNotFoundError:
 
 
 textSelectPort=tkinter.Label(window,text="Select Arduino port")
-textSelectFreq=tkinter.Label(window,text="refresh Freq, default 2s (no decimal)")
+textSelectFreq=tkinter.Label(window,text="Freq, default 2s (no decimal)")
 buttonApply=tkinter.Button(window,text="Apply",command=applyButtonOnclick)
 buttonSaveCfg=tkinter.Button(window,text="save cfg",command=writeCfg)
 

@@ -6,7 +6,7 @@
 #include "ESPAsyncWebServer.h"
 #include <WiFi.h>
 #include <Arduino.h>
-#include "ESP32TimerInterrupt.h"
+//#include "ESP32TimerInterrupt.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -19,8 +19,10 @@
 #define EEPROM_ADDR_READ 0xA1
 #define EEPROM_I2C_ADDR 0x50
 
-ESP32Timer ITimer(1);
-ESP32_ISR_Timer ISR_TIMER;
+//ESP32Timer ITimer(1);
+//ESP32_ISR_Timer ISR_TIMER;
+
+
 
 int BOOT_HR = 25;
 int BOOT_MIN = 61;
@@ -44,6 +46,14 @@ char *pwd = "5085581232";
 int wifiType=1;
 
 DS1302 rtc(RTC_RST, RTC_DAT, RTC_CLK);
+
+hw_timer_t *Timer0=NULL;
+
+void IRAM_ATTR Timer0_ISR()
+{
+    //Serial.println("interrupt");
+    digitalWrite(27,!digitalRead(27));
+}
 
 AsyncWebServer server(80);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
@@ -352,6 +362,12 @@ void setup()
   Serial.begin(115200);
   // btser.begin("ESP32");
   pinMode(12, OUTPUT);
+  pinMode(27, OUTPUT);
+
+  Timer0=timerBegin(0,80,true);
+  timerAttachInterrupt(Timer0,&Timer0_ISR,false);
+  timerAlarmWrite(Timer0,1000000,true);
+  timerAlarmEnable(Timer0);
 
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
   {
