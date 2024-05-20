@@ -22,8 +22,6 @@
 //ESP32Timer ITimer(1);
 //ESP32_ISR_Timer ISR_TIMER;
 
-
-
 int BOOT_HR = 25;
 int BOOT_MIN = 61;
 int BOOT_SEC = 61;
@@ -31,6 +29,9 @@ int BOOT_SEC = 61;
 int OFF_HR = 25;
 int OFF_MIN = 61;
 int OFF_SEC = 61;
+
+bool ON_EXECUTED=false;
+bool OFF_EXECUTED=false;
 
 String curHostname = "NaN";
 double curCpu = 0;
@@ -49,10 +50,87 @@ DS1302 rtc(RTC_RST, RTC_DAT, RTC_CLK);
 
 hw_timer_t *Timer0=NULL;
 
+void showTime(void *parameter)
+{
+  Time curtime = rtc.time();
+  int hr=curtime.hr;
+  int min=curtime.minu;
+  Serial.println(hr);
+  Serial.println(min);
+  Serial.println(BOOT_HR);
+  Serial.println(BOOT_MIN);
+  vTaskDelete(NULL);
+}
+
+void powerOffTask(void *parameter)
+{
+  // 将针脚设置为输出模式
+  Serial.println("PowerOff Task entry");
+  digitalWrite(12, HIGH);
+  vTaskDelay(pdMS_TO_TICKS(4000));
+  digitalWrite(12, LOW);
+  vTaskDelete(NULL);
+}
+
+void powerOnTask(void *parameter)
+{
+  // 将针脚设置为输出模式
+  Serial.println("PowerOn Task entry");
+  digitalWrite(12, HIGH);
+  vTaskDelay(pdMS_TO_TICKS(500));
+  digitalWrite(12, LOW);
+  vTaskDelete(NULL);
+}
+
 void IRAM_ATTR Timer0_ISR()
 {
     //Serial.println("interrupt");
-    digitalWrite(27,!digitalRead(27));
+    //digitalWrite(27,!digitalRead(27));
+    Time curtime = rtc.time();
+    int hr=curtime.hr;
+    int min=curtime.minu;
+    /*xTaskCreatePinnedToCore(
+                  showTime, // 任务函数
+                  "showTime",   // 任务名称
+                  1000,         // 堆栈大小（字节）
+                  NULL,         // 任务参数
+                  0,            // 任务优先级
+                  NULL,         // 任务句柄
+                  0             // 核心编号（0 或 1）
+    );*/
+    if(hr==0 && min==0)
+    {
+      ON_EXECUTED=false;
+      OFF_EXECUTED=false;
+    }    
+    if(BOOT_HR==hr && BOOT_MIN==min && !ON_EXECUTED)
+    {
+      ON_EXECUTED=true;
+      digitalWrite(27,!digitalRead(27));
+      xTaskCreatePinnedToCore(
+                  powerOnTask, // 任务函数
+                  "PowerOn",   // 任务名称
+                  1000,         // 堆栈大小（字节）
+                  NULL,         // 任务参数
+                  0,            // 任务优先级
+                  NULL,         // 任务句柄
+                  0             // 核心编号（0 或 1）
+              );
+    }
+    if(hr==OFF_HR && min==OFF_MIN && !OFF_EXECUTED)
+    {
+      OFF_EXECUTED=true;
+      digitalWrite(27,!digitalRead(27));
+      xTaskCreatePinnedToCore(
+                  powerOffTask, // 任务函数
+                  "PowerOff",   // 任务名称
+                  1000,         // 堆栈大小（字节）
+                  NULL,         // 任务参数
+                  0,            // 任务优先级
+                  NULL,         // 任务句柄
+                  0             // 核心编号（0 或 1）
+              );
+    }
 }
 
 AsyncWebServer server(80);
@@ -91,26 +169,6 @@ char *readFromEEPROM(int addr)
     i++;
   }
   return str;
-}
-
-void powerOffTask(void *parameter)
-{
-  // 将针脚设置为输出模式
-  Serial.println("PowerOff Task entry");
-  digitalWrite(12, HIGH);
-  vTaskDelay(pdMS_TO_TICKS(4000));
-  digitalWrite(12, LOW);
-  vTaskDelete(NULL);
-}
-
-void powerOnTask(void *parameter)
-{
-  // 将针脚设置为输出模式
-  Serial.println("PowerOn Task entry");
-  digitalWrite(12, HIGH);
-  vTaskDelay(pdMS_TO_TICKS(500));
-  digitalWrite(12, LOW);
-  vTaskDelete(NULL);
 }
 
 void initApWifi()
@@ -231,6 +289,7 @@ void handlePostRequest(AsyncWebServerRequest *request)
       String header = strtok(dataArray, ",");
       if (header == "onTime")
       {
+        ON_EXECUTED=false;
         char *hr = strtok(NULL, ",");
         BOOT_HR = atoi(hr);
         char *min = strtok(NULL, ",");
@@ -256,6 +315,7 @@ void handlePostRequest(AsyncWebServerRequest *request)
       }
       else if (header == "offTime")
       {
+        OFF_EXECUTED=false;
         char *hr = strtok(NULL, ",");
         OFF_HR = atoi(hr);
         char *min = strtok(NULL, ",");
@@ -366,7 +426,7 @@ void setup()
 
   Timer0=timerBegin(0,80,true);
   timerAttachInterrupt(Timer0,&Timer0_ISR,false);
-  timerAlarmWrite(Timer0,1000000,true);
+  timerAlarmWrite(Timer0,5000000,true);
   timerAlarmEnable(Timer0);
 
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
