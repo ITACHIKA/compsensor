@@ -13,7 +13,7 @@ from tkinter import messagebox
 from datetime import datetime
 
 ser=None
-getStatFreq=2
+getStatFreq=1
 newProceStartEvent=threading.Event()
 lastByteRecv=0
 lastByteSent=0
@@ -27,7 +27,7 @@ print(ostype)
 def getSystemStatus():
     global lastByteRecv,lastByteSent
     if(ostype=="Windows"):
-        cpuUsage=psutil.cpu_percent(0.1)
+        cpuUsage=psutil.cpu_percent(0.2)
     else:
         cpuUsage=psutil.cpu_percent()
     memUsage=psutil.virtual_memory().percent
@@ -46,11 +46,14 @@ def initArduino():
         hostname=platform.node()
         systime=datetime.now()
 
+        yr=systime.year
+        mon=systime.month
+        date=systime.day
         hour=systime.hour
         minute=systime.minute
         sec=systime.second
 
-        initStr = ",".join(map(str,[hour,minute,sec]))
+        initStr = ",".join(map(str,[yr,mon,date,hour,minute,sec]))
         initStr = "init,"+initStr+","+str(getStatFreq)+"\n"
         print(initStr)
         initBytes = initStr.encode("utf-8")
@@ -198,4 +201,4 @@ infoRetrieveFreq.grid(row=4,column=0,sticky='w',columnspan=2)
 buttonApply.grid(row=5,column=0,sticky='w')
 buttonSaveCfg.grid(row=5,column=1,sticky='w')
 
-window.mainloop()
+window.mainloop()  
